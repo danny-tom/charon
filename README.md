@@ -16,7 +16,7 @@ any Discord server.
   `pip install discord.py`
 
 # Running the Bot
-Set your Discord token. You should replace the `###TOKEN HERE###` in `.env` with the token for your bot at Discord's Developer page.
+Set your Discord token. You should replace the `###TOKEN HERE###` in `.env` with the token for your bot at Discord's Developer page.  <br /><br />
 Add/remove/modify the roles in `roles.py`. You should create roles you'd like the bot to manage with matching names between your Discord server
 and `roles.py`.
 
