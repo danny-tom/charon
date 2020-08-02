@@ -40,8 +40,8 @@ async def on_message(message):
                     await message.channel.send(f'{message.author.name}, you are'
                                                f' removed from {role}')
                 else:
-                    await message.channel.send(f'{message.author.name}, but were'
-                                               f' never {role}')
+                    await message.channel.send(f'{message.author.name}, but you'
+                                               f' were never {role}')
             except AttributeError:
                 await message.channel.send(f'{message.author.name}, that role does'
                                            ' not exist or I have not been given'
