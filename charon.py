@@ -27,7 +27,7 @@ async def on_message(message):
                     await message.channel.send(f'{message.author.name}, you'
                                                f' are granted {role}')
                 else:
-                    await message.channel.send(f'{message.author.name}, but '
+                    await message.channel.send(f'{message.author.name}, but'
                                                f' you are already {role}')
             except AttributeError:
                 await message.channel.send(f'{message.author.name}, that role'
