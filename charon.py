@@ -18,7 +18,9 @@ lowerList = [e.casefold() for e in roles.ROLES_LIST]
 # role name not found in server or the bot does not have enough permissions
 @bot.event
 async def on_message(message):
-    # Only performs actions on messages that start with !iam
+    # !iam/!iamnot
+    # This is the primary use of the bot. Assignment based on the messages
+    # that people type
     if message.content.startswith('!iam'):
         # After the command, the 2nd part is the role name
         roleInput = message.content.split(" ", 1)[1]
@@ -64,5 +66,69 @@ async def on_message(message):
                         f'{message.author.name}, that role does not exist or'
                         ' I have not been given permission to grant you that'
                         ' role')
+
+    # !whois
+    # Outputs list of users that that a specific role
+    if message.content.startswith('!whois'):
+        # After the command, the 2nd part is the role name
+        roleInput = message.content.split(" ", 1)[1]
+
+        # Ignore case sensitivity for the role
+        # Check if the bot has should be able to give that particular role
+        # information
+        try:
+            index = lowerList.index(roleInput.casefold())
+            searchedRole = discord.utils.get(message.guild.roles,
+                                             name=roles.ROLES_LIST[index])
+        except ValueError:
+            await message.channel.send(
+                f'{message.author.name}, that role does not exist or I have'
+                ' not been given permission to give you that information')
+
+        if roleInput.casefold() in lowerList:
+            try:
+                membersList = searchedRole.members
+                membersWithRole = list(member.name for member in membersList)
+                sortedList = sorted(membersWithRole, key=str.casefold)
+                membersWithRoleStr = "\n"
+                membersWithRoleStr = membersWithRoleStr.join(sortedList)
+                await message.channel.send(
+                    f'{message.author.name}, here is the list of users in'
+                    f' {roles.ROLES_LIST[index]} you requested\n'
+                    f'```{membersWithRoleStr}```')
+            except AttributeError:
+                await message.channel.send(
+                    f'{message.author.name}, that role does not exist or I'
+                    ' have not been given permission to give you that'
+                    ' information')
+
+    # !games
+    # Outputs list of roles that the bot recognizes from the Discord server
+    if message.content == '!games':
+        try:
+            sortedList = sorted(roles.ROLES_LIST, key=str.casefold)
+            registeredUsersList = []
+            for role in sortedList:
+                registeredUsers = len(discord.utils.get(message.guild.roles,
+                                                        name=role).members)
+                registeredUsersList.append(registeredUsers)
+
+            gameAndCount = list(zip(sortedList, registeredUsersList))
+            gameAndCountStr = "\n"
+
+            for pair in gameAndCount:
+                gameAndCountStr += pair[0] + '\t(' + str(pair[1]) + ')\n'
+
+            outputString = f'{message.author.name}, here is a list of the' \
+                f' roles that I manage ```{gameAndCountStr}```'
+
+            await message.channel.send(outputString)
+
+        except AttributeError:
+            await message.channel.send(
+                f'{message.author.name}, that role does not exist or I'
+                ' have not been given permission to give you that'
+                ' information')
+
 
 bot.run(TOKEN)
