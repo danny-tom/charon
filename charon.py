@@ -105,15 +105,21 @@ async def on_message(message):
     # !games
     # Outputs list of roles that the bot recognizes from the Discord server
     if message.content == '!games':
-        try:
-            sortedList = sorted(roles.ROLES_LIST, key=str.casefold)
-            registeredUsersList = []
-            for role in sortedList:
-                registeredUsers = len(discord.utils.get(message.guild.roles,
-                                                        name=role).members)
-                registeredUsersList.append(registeredUsers)
+        sortedList = sorted(roles.ROLES_LIST, key=str.casefold)
+        registeredUsersList = []
+        newGamesList = []
 
-            gameAndCount = list(zip(sortedList, registeredUsersList))
+        try:
+            for role in sortedList:
+                if discord.utils.get(message.guild.roles, name=role) is None:
+                    pass
+                else:
+                    registeredUsers = len(discord.utils.get(
+                        message.guild.roles, name=role).members)
+                    newGamesList.append(role)
+                    registeredUsersList.append(registeredUsers)
+
+            gameAndCount = list(zip(newGamesList, registeredUsersList))
             gameAndCountStr = "\n"
 
             for pair in gameAndCount:
@@ -122,7 +128,11 @@ async def on_message(message):
             outputString = f'{message.author.name}, here is a list of the' \
                 f' roles that I manage ```{gameAndCountStr}```'
 
-            await message.channel.send(outputString)
+            if len(gameAndCount) == 0:
+                await message.channel.send(f'{message.author.name}, I manage'
+                                           ' no games here')
+            else:
+                await message.channel.send(outputString)
 
         except AttributeError:
             await message.channel.send(
