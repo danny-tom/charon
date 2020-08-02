@@ -33,7 +33,7 @@ async def on_message(message):
                                            ' not exist or I have not been given '
                                            ' permission to grant you that role')
 
-        if message.content == '!iamnot valorant':
+        if message.content == '!iamnot ' + role.lower():
             try:
                 if(role in message.author.roles):
                     await message.author.remove_roles(role)
