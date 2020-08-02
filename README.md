@@ -2,7 +2,7 @@
 Concierge at The Continental
 
 Charon is a template for a role assignment Discord bot. When a user messages `!iam <role name>` or `!iamnot <role name>`  in
-any channel and the bot tries to assign the appropriate role. This is a template because the `roles.py` file is meant to be modified to meet the needs of
+any channel, the bot tries to assign the appropriate role. This is a template because the `roles.py` file is meant to be modified to meet the needs of
 any Discord server.
 
 # Dependencies
