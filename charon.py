@@ -126,9 +126,8 @@ async def on_message(message):
 
         except AttributeError:
             await message.channel.send(
-                f'{message.author.name}, that role does not exist or I'
-                ' have not been given permission to give you that'
-                ' information')
+                f'{message.author.name}, there was an issue finding the games'
+                'that this server supports')
 
 
 bot.run(TOKEN)
