@@ -16,61 +16,77 @@ lowerList = [e.casefold() for e in roles.ROLES_LIST]
 # '!iamnot valorant', the bot will grant the role matching the String
 # stored in roles.py. The bot will message on errors such as
 # role name not found in server or the bot does not have enough permissions
-@bot.event
-async def on_message(message):
-    # !iam/!iamnot
-    # This is the primary use of the bot. Assignment based on the messages
-    # that people type
-    if message.content.startswith('!iam'):
-        # After the command, the 2nd part is the role name
-        roleInput = message.content.split(" ", 1)[1]
 
-        # Ignore case sensitivity for the role
-        if roleInput.casefold() in lowerList:
-            index = lowerList.index(roleInput.casefold())
-            newRole = discord.utils.get(message.guild.roles,
-                                        name=roles.ROLES_LIST[index])
+def iam_helper(message):
+    roleInput = message.content.split(" ", 1)[1]
+    # Ignore case sensitivity for the role
+    if roleInput.casefold() in lowerList:
+        roleIndex = lowerList.index(roleInput.casefold())
+        newRole = discord.utils.get(message.guild.roles,
+                                    name=roles.ROLES_LIST[roleIndex])
+        return True, newRole, roleIndex
+    return False, "", -1
 
-            # !iamnot logic
-            if message.content.startswith('!iamnot'):
-                try:
-                    if(newRole in message.author.roles):
-                        await message.author.remove_roles(newRole)
-                        await message.channel.send(
-                            f'{message.author.name}, you are removed from'
-                            f' {roles.ROLES_LIST[index]}')
-                    else:
-                        await message.channel.send(
-                            f'{message.author.name}, but you were never'
-                            f' {roles.ROLES_LIST[index]}')
-                except AttributeError:
+async def iam(message):
+    '''Usage: \"!iam SomeRole\" - Add yourself to SomeRole'''
+    try:
+        role_found, newRole, index = iam_helper(message)
+
+        if (role_found):
+            try:
+                if(newRole not in message.author.roles):
+                    await message.author.add_roles(newRole)
                     await message.channel.send(
-                        f'{message.author.name}, that role does not exist or I'
-                        'have not been given permission to grant you that'
-                        ' role')
-
-            # !iam logic
-            elif message.content.startswith('!iam'):
-                try:
-                    if(newRole not in message.author.roles):
-                        await message.author.add_roles(newRole)
-                        await message.channel.send(
-                            f'{message.author.name}, you are granted'
-                            f' {roles.ROLES_LIST[index]}')
-                    else:
-                        await message.channel.send(
-                            f'{message.author.name}, but you are already'
-                            f' {roles.ROLES_LIST[index]}')
-                except AttributeError:
+                        f'{message.author.name}, you are granted'
+                        f' {roles.ROLES_LIST[index]}')
+                else:
                     await message.channel.send(
-                        f'{message.author.name}, that role does not exist or'
-                        ' I have not been given permission to grant you that'
-                        ' role')
+                        f'{message.author.name}, but you are already'
+                        f' {roles.ROLES_LIST[index]}')
+            except AttributeError:
+                await message.channel.send(
+                    f'{message.author.name}, that role does not exist or'
+                    ' I have not been given permission to grant you that'
+                    ' role')
+        else:
+            await message.channel.send(
+                f'{message.author.name}, that role does not exist')
+    except IndexError:
+        await message.channel.send(
+            f'{message.author.name}, please tell me what role to use for iam')
 
-    # !whois
-    # Outputs list of users that that a specific role
-    if message.content.startswith('!whois'):
-        # After the command, the 2nd part is the role name
+async def iamnot(message):
+    '''Usage: \"!iamnot SomeRole\" - Remove yourself from SomeRole'''
+    try:
+        role_found, newRole, index = iam_helper(message)
+            
+        if (role_found):
+            try:
+                if(newRole in message.author.roles):
+                    await message.author.remove_roles(newRole)
+                    await message.channel.send(
+                        f'{message.author.name}, you are removed from'
+                        f' {roles.ROLES_LIST[index]}')
+                else:
+                    await message.channel.send(
+                        f'{message.author.name}, but you were never'
+                        f' {roles.ROLES_LIST[index]}')
+            except AttributeError:
+                await message.channel.send(
+                    f'{message.author.name}, that role does not exist or I'
+                    'have not been given permission to grant you that'
+                    ' role')
+        else:
+            await message.channel.send(
+                f'{message.author.name}, that role does not exist')
+    except IndexError:
+        await message.channel.send(
+            f'{message.author.name}, please tell me what role to use for iamnot')
+
+async def whois(message):
+    '''Usage: \"!whois SomeRole\" - Prints a list of users belonging to SomeRole'''
+    # After the command, the 2nd part is the role name
+    try:
         roleInput = message.content.split(" ", 1)[1]
 
         # Ignore case sensitivity for the role
@@ -79,7 +95,7 @@ async def on_message(message):
         try:
             index = lowerList.index(roleInput.casefold())
             searchedRole = discord.utils.get(message.guild.roles,
-                                             name=roles.ROLES_LIST[index])
+                                                name=roles.ROLES_LIST[index])
         except ValueError:
             await message.channel.send(
                 f'{message.author.name}, that role does not exist or I have'
@@ -94,50 +110,91 @@ async def on_message(message):
                 membersWithRoleStr = membersWithRoleStr.join(sortedList)
                 await message.channel.send(
                     f'{message.author.name}, here is the list of users in'
-                    f' {roles.ROLES_LIST[index]} you requested\n'
+                    f' {roles.ROLES_LIST[index]} you requested:'
                     f'```{membersWithRoleStr}```')
             except AttributeError:
                 await message.channel.send(
                     f'{message.author.name}, that role does not exist or I'
                     ' have not been given permission to give you that'
                     ' information')
+    except IndexError:
+        await message.channel.send(
+            f'{message.author.name}, please tell me what role to use for whois')
 
-    # !games
-    # Outputs list of roles that the bot recognizes from the Discord server
-    if message.content == '!games':
-        sortedList = sorted(roles.ROLES_LIST, key=str.casefold)
-        registeredUsersList = []
-        newGamesList = []
+async def games(message):
+    '''Usage: \"!games\" - Prints a list of my supported roles'''
+    sortedList = sorted(roles.ROLES_LIST, key=str.casefold)
+    registeredUsersList = []
+    newGamesList = []
 
-        try:
-            for role in sortedList:
-                if discord.utils.get(message.guild.roles, name=role) is None:
-                    pass
-                else:
-                    registeredUsers = len(discord.utils.get(
-                        message.guild.roles, name=role).members)
-                    newGamesList.append(role)
-                    registeredUsersList.append(registeredUsers)
-
-            gameAndCount = list(zip(newGamesList, registeredUsersList))
-            gameAndCountStr = "\n"
-
-            for pair in gameAndCount:
-                gameAndCountStr += pair[0] + '\t(' + str(pair[1]) + ')\n'
-
-            outputString = f'{message.author.name}, here is a list of the' \
-                f' roles that I manage ```{gameAndCountStr}```'
-
-            if len(gameAndCount) == 0:
-                await message.channel.send(f'{message.author.name}, I manage'
-                                           ' no games here')
+    try:
+        for role in sortedList:
+            if discord.utils.get(message.guild.roles, name=role) is None:
+                pass
             else:
-                await message.channel.send(outputString)
+                registeredUsers = len(discord.utils.get(
+                    message.guild.roles, name=role).members)
+                newGamesList.append(role)
+                registeredUsersList.append(registeredUsers)
 
-        except AttributeError:
+        gameAndCount = list(zip(newGamesList, registeredUsersList))
+        gameAndCountStr = "\n"
+
+        for pair in gameAndCount:
+            gameAndCountStr += pair[0] + '\t(' + str(pair[1]) + ')\n'
+
+        outputString = f'{message.author.name}, here is a list of the' \
+            f' roles that I manage: ```{gameAndCountStr}```'
+
+        if len(gameAndCount) == 0:
+            await message.channel.send(f'{message.author.name}, I manage'
+                                        ' no games here')
+        else:
+            await message.channel.send(outputString)
+
+    except AttributeError:
+        await message.channel.send(
+            f'{message.author.name}, there was an issue finding the games'
+            'that this server supports')
+
+
+async def charon_help(message):
+    """Usage: \"!help\" - Prints a list of supported commands
+    \"!help SomeCommand\" - Prints help for SomeCommand"""
+    command_list = '\n'+'\n'.join(LIST_OF_COMMANDS.keys())
+
+    if (message.content.count(" ") is 1):
+        command = message.content.split(" ")[1]
+        if (command in LIST_OF_COMMANDS.keys()):
+            await message.channel.send(f'{message.author.name}, here is what I know' 
+                f' about {command}: ```{LIST_OF_COMMANDS[command].__doc__}```')
+        else:
+            await message.channel.send(f'{message.author.name}, I have not heard of ' 
+                'that command. Here is a list of the commands that I know:'
+                f'```{command_list}```')
+    else:
+        await message.channel.send(f'{message.author.name}, Here is a list of the '
+            f'commands that I know: ```{command_list}```')
+
+
+LIST_OF_COMMANDS = {
+    "iam":iam,
+    "iamnot":iamnot,
+    "whois":whois,
+    "games":games,
+    "help":charon_help
+                    }
+
+@bot.event
+async def on_message(message):
+    if message.content.startswith('!'):
+        command = message.content.split(" ")[0][1:]
+        if command in LIST_OF_COMMANDS.keys():
+            # See above for command functions
+            await LIST_OF_COMMANDS[command](message)
+        else:
             await message.channel.send(
-                f'{message.author.name}, there was an issue finding the games'
-                'that this server supports')
-
+                f'{message.author.name}, that is an unrecognized command. '
+                'For a list of supported commands, please send \"!help\"')
 
 bot.run(TOKEN)
