@@ -26,7 +26,7 @@ Linux: `python3 charon.py`  <br />
 This should start the process that runs the bot.
  
 # Example Discord commands
-`!iam valorant` assigns yourself the Valorant role  <br />
-`!iamnot valorant` removes yourself from the Valorant role  <br />
-`!whois valorant`  lists the users that have the Valorant role  <br />
-`!games` lists the roles that the Discord server supports
+`.iam valorant` assigns yourself the Valorant role  <br />
+`.iamnot valorant` removes yourself from the Valorant role  <br />
+`.whois valorant`  lists the users that have the Valorant role  <br />
+`.games` lists the roles that the Discord server supports
