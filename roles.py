@@ -8,8 +8,10 @@
 
 VALORANT = 'Valorant'
 OVERWATCH = 'Overwatch'
+PROJECTWINTER = 'ProjectWinter'
 
 ROLES_LIST = [
               VALORANT,
-              OVERWATCH
+              OVERWATCH,
+              PROJECTWINTER
               ]
