@@ -190,12 +190,14 @@ charon_help.__doc__ = f'''Usage: \"{COMMAND_PREFIX}help\" - Prints a list of sup
 
 @bot.event
 async def on_message(message):
+    # Messages that should bring up the "unrecognized command" reply: ".foo", "."
+    # Messages that should not: "..", "..."
     if message.content.startswith(COMMAND_PREFIX):
         command = message.content.split(" ")[0][1:]
         if command in LIST_OF_COMMANDS.keys():
             # See above for command functions
             await LIST_OF_COMMANDS[command](message)
-        else:
+        elif not command.startswith(COMMAND_PREFIX):
             await message.channel.send(
                 f'{message.author.name}, that is an unrecognized command. '
                 f'For a list of supported commands, please send \"{COMMAND_PREFIX}help\"')
