@@ -7,13 +7,14 @@ import roles
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
+COMMAND_PREFIX = '.'
 
-bot = discord.ext.commands.Bot('!')
+bot = discord.ext.commands.Bot(COMMAND_PREFIX)
 
 lowerList = [e.casefold() for e in roles.ROLES_LIST]
 
-# On any message, if the exact text is '!iam valorant' or
-# '!iamnot valorant', the bot will grant the role matching the String
+# On any message, if the exact text is '.iam valorant' or
+# '.iamnot valorant', the bot will grant the role matching the String
 # stored in roles.py. The bot will message on errors such as
 # role name not found in server or the bot does not have enough permissions
 
@@ -28,7 +29,6 @@ def iam_helper(message):
     return False, "", -1
 
 async def iam(message):
-    '''Usage: \"!iam SomeRole\" - Add yourself to SomeRole'''
     try:
         role_found, newRole, index = iam_helper(message)
 
@@ -55,8 +55,8 @@ async def iam(message):
         await message.channel.send(
             f'{message.author.name}, please tell me what role to use for iam')
 
+
 async def iamnot(message):
-    '''Usage: \"!iamnot SomeRole\" - Remove yourself from SomeRole'''
     try:
         role_found, newRole, index = iam_helper(message)
             
@@ -84,7 +84,6 @@ async def iamnot(message):
             f'{message.author.name}, please tell me what role to use for iamnot')
 
 async def whois(message):
-    '''Usage: \"!whois SomeRole\" - Prints a list of users belonging to SomeRole'''
     # After the command, the 2nd part is the role name
     try:
         roleInput = message.content.split(" ", 1)[1]
@@ -122,7 +121,6 @@ async def whois(message):
             f'{message.author.name}, please tell me what role to use for whois')
 
 async def games(message):
-    '''Usage: \"!games\" - Prints a list of my supported roles'''
     sortedList = sorted(roles.ROLES_LIST, key=str.casefold)
     registeredUsersList = []
     newGamesList = []
@@ -159,8 +157,6 @@ async def games(message):
 
 
 async def charon_help(message):
-    """Usage: \"!help\" - Prints a list of supported commands
-    \"!help SomeCommand\" - Prints help for SomeCommand"""
     command_list = '\n'+'\n'.join(LIST_OF_COMMANDS.keys())
 
     if (message.content.count(" ") is 1):
@@ -185,9 +181,16 @@ LIST_OF_COMMANDS = {
     "help":charon_help
                     }
 
+iam.__doc__ = f'''Usage: \"{COMMAND_PREFIX}iam SomeRole\" - Add yourself to SomeRole'''
+iamnot.__doc__ = f'''Usage: \"{COMMAND_PREFIX}iamnot SomeRole\" - Remove yourself from SomeRole'''
+whois.__doc__ = f'''Usage: \"{COMMAND_PREFIX}whois SomeRole\" - Prints a list of users belonging to SomeRole'''
+games.__doc__ = f'''Usage: \"{COMMAND_PREFIX}games\" - Prints a list of my supported roles'''
+charon_help.__doc__ = f'''Usage: \"{COMMAND_PREFIX}help\" - Prints a list of supported commands\n\
+    \"{COMMAND_PREFIX}help SomeCommand\" - Prints help for SomeCommand'''
+
 @bot.event
 async def on_message(message):
-    if message.content.startswith('!'):
+    if message.content.startswith(COMMAND_PREFIX):
         command = message.content.split(" ")[0][1:]
         if command in LIST_OF_COMMANDS.keys():
             # See above for command functions
@@ -195,6 +198,6 @@ async def on_message(message):
         else:
             await message.channel.send(
                 f'{message.author.name}, that is an unrecognized command. '
-                'For a list of supported commands, please send \"!help\"')
+                f'For a list of supported commands, please send \"{COMMAND_PREFIX}help\"')
 
 bot.run(TOKEN)
