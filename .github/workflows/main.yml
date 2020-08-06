@@ -3,12 +3,10 @@
 name: CI
 
 # Controls when the action will run. Triggers the workflow on push or pull request
-# events but only for the master branch
+# events but only for the auto-deploy-master branch
 on:
   push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+    branches: [ auto-deploy-master ]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -41,3 +39,7 @@ jobs:
         service_account_email: # optional
         # The service account key which will be used for authentication.
         service_account_key: {GCLOUD_SERVICE_ACCOUNT_KEY}
+        
+    # Run the restart script in the Gcloud ssh session
+    - name: Run restart script
+      run: ./scripts/restart-bot.sh
