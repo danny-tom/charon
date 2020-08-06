@@ -23,6 +23,7 @@ jobs:
     # Runs a single command using the runners shell
     - name: Run a one-line script
       run: |
+        pip install pyopenssl
         sudo apt-get install python-openssl
         CLOUDSDK_PYTHON_SITEPACKAGES=1
 
