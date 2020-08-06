@@ -20,15 +20,9 @@ jobs:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v2
 
-    # Runs a single command using the runners shell
-    - name: Run a one-line script
-      run: echo Hello, world!
-
-    # Runs a set of commands using the runners shell
-    - name: Run a multi-line script
-      run: |
-        echo Add other actions to build,
-        echo test, and deploy your project.
+    # Test to see if we have PyOpenSSL
+    - name: Check if we have dependencies
+      run: echo pip show pyopenssl
 
     - name: Setup gcloud environment
       uses: GoogleCloudPlatform/github-actions@0.1.2
@@ -39,6 +33,7 @@ jobs:
         service_account_email: ${{secrets.GCLOUD_SERVICE_ACCOUNT_EMAIL}}
         # The service account key which will be used for authentication.
         service_account_key: ${{secrets.GCLOUD_SERVICE_ACCOUNT_KEY}}
+      run: gcloud compute ssh ${{secrets.GCLOUD_INSTANCE}}
 
     # Run the restart script in the Gcloud ssh session
     - name: Run restart script
