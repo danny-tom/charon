@@ -3,6 +3,8 @@ import os
 import discord.ext.commands.bot
 from dotenv import load_dotenv
 import roles
+import re
+import random
 
 
 load_dotenv()
@@ -159,7 +161,7 @@ async def games(message):
 async def charon_help(message):
     command_list = '\n'+'\n'.join(LIST_OF_COMMANDS.keys())
 
-    if (message.content.count(" ") is 1):
+    if (message.content.count(" ") == 1):
         command = message.content.split(" ")[1]
         if (command in LIST_OF_COMMANDS.keys()):
             await message.channel.send(f'{message.author.name}, here is what I know' 
@@ -192,14 +194,29 @@ charon_help.__doc__ = f'''Usage: \"{COMMAND_PREFIX}help\" - Prints a list of sup
 async def on_message(message):
     # Messages that should bring up the "unrecognized command" reply: ".foo", "."
     # Messages that should not: "..", "..."
-    if message.content.startswith(COMMAND_PREFIX):
-        command = message.content.split(" ")[0][1:]
-        if command in LIST_OF_COMMANDS.keys():
-            # See above for command functions
-            await LIST_OF_COMMANDS[command](message)
-        elif not command.startswith(COMMAND_PREFIX):
-            await message.channel.send(
-                f'{message.author.name}, that is an unrecognized command. '
-                f'For a list of supported commands, please send \"{COMMAND_PREFIX}help\"')
+    result = re.match(f'^{COMMAND_PREFIX}([a-zA-Z0-9]+)', message.content)
+    if not result:
+        return
+
+    command = result.group(1)
+    if command in LIST_OF_COMMANDS.keys():
+        # See above for command functions
+        await LIST_OF_COMMANDS[command](message)
+    else:
+        await message.channel.send(
+            f'{message.author.name}, that is an unrecognized command.\n'
+            f'For a list of supported commands, please send \"{COMMAND_PREFIX}help\"')
+
+@bot.event
+async def on_member_join(member):
+    # Pick text channel that is top of the list. Can change to check for Continental in future patch
+    textChannel = list(filter(lambda x: x.type == discord.ChannelType.text and x.position == 0, member.guild.channels))[0]
+    # For flavor, pick a random number of days
+    numDays = random.randrange(1, 366)
+    await textChannel.send(
+        f'Welcome to the Continental, {member.mention}.\n'
+        f'My name is Charon. I see you will be staying with us for {numDays} day{"s" if numDays > 1 else ""}.\n'
+        f'Feel free to dial \"{COMMAND_PREFIX}help\" if you require any assistance.\n'
+        f'...and as always, it is a pleasure having you with us again, {member.name}.')
 
 bot.run(TOKEN)
