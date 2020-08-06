@@ -28,7 +28,7 @@ jobs:
     - name: Setup gcloud environment
       uses: GoogleCloudPlatform/github-actions@0.1.2
       env:
-        GCLOUD_COMPUTE_INSTANCE = ${{ GCLOUD_COMPUTE_INSTANCE}}
+        GCLOUD_COMPUTE_INSTANCE = ${{ secrets.GCLOUD_COMPUTE_INSTANCE}}
       with:
         # The version of the gcloud SDK to be installed.  Example: 275.0.0
         version: # optional, default is 275.0.0
@@ -36,7 +36,7 @@ jobs:
         service_account_email: ${{ secrets.GCLOUD_SERVICE_ACCOUNT_EMAIL }}
         # The service account key which will be used for authentication.
         service_account_key: ${{ secrets.GCLOUD_SERVICE_ACCOUNT_KEY }}
-    - run gcloud compute ssh ${{ GCLOUD_COMPUTE_INSTANCE }}
+    - run: gcloud compute ssh ${{ GCLOUD_COMPUTE_INSTANCE }}
 
     # Run the restart script in the Gcloud ssh session
     - name: Run restart script
