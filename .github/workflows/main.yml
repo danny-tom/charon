@@ -38,8 +38,10 @@ jobs:
         # The service account email which will be used for authentication.
         service_account_email: # optional
         # The service account key which will be used for authentication.
-        service_account_key: {GCLOUD_SERVICE_ACCOUNT_KEY}
-        
+        service_account_key: ${{GCLOUD_SERVICE_ACCOUNT_KEY}}
+      run: gcloud compute ssh ${{GCLOUD_INSTANCE}}
+
     # Run the restart script in the Gcloud ssh session
     - name: Run restart script
+      env: ${{TEST_TOKEN}}
       run: ./scripts/restart-bot.sh
