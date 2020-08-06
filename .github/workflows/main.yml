@@ -29,6 +29,7 @@ jobs:
       with:
         # The version of the gcloud SDK to be installed.  Example: 275.0.0
         version: # optional, default is 275.0.0
+        project_id: ${{secrets.GCLOUD_PROJECT_ID }}
         # The service account email which will be used for authentication.
         service_account_email: ${{ secrets.GCLOUD_SERVICE_ACCOUNT_EMAIL }}
         # The service account key which will be used for authentication.
