@@ -20,10 +20,6 @@ jobs:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v2
 
-    # Test to see if we have PyOpenSSL
-    - name: Check if we have dependencies
-      run: echo pip show pyopenssl
-
     - name: Setup gcloud environment
       uses: GoogleCloudPlatform/github-actions@0.1.2
       with:
@@ -33,7 +29,9 @@ jobs:
         service_account_email: ${{secrets.GCLOUD_SERVICE_ACCOUNT_EMAIL}}
         # The service account key which will be used for authentication.
         service_account_key: ${{secrets.GCLOUD_SERVICE_ACCOUNT_KEY}}
-      run: gcloud compute ssh ${{secrets.GCLOUD_INSTANCE}}
+      run: |
+        pip show pyopenssl
+        gcloud compute ssh ${{secrets.GCLOUD_INSTANCE}}
 
     # Run the restart script in the Gcloud ssh session
     - name: Run restart script
