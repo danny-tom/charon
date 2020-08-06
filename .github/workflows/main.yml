@@ -24,6 +24,7 @@ jobs:
     - name: Run a one-line script
       run: |
         sudo apt-get install python-openssl
+        CLOUDSDK_PYTHON_SITEPACKAGES=1
 
     - name: Setup gcloud environment
       uses: GoogleCloudPlatform/github-actions@0.1.2
