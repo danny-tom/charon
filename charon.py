@@ -194,7 +194,7 @@ charon_help.__doc__ = f'''Usage: \"{COMMAND_PREFIX}help\" - Prints a list of sup
 async def on_message(message):
     # Messages that should bring up the "unrecognized command" reply: ".foo", "."
     # Messages that should not: "..", "..."
-    result = re.match('^\.([a-zA-Z0-9]+)', message.content)
+    result = re.match(f'^{COMMAND_PREFIX}([a-zA-Z0-9]+)', message.content)
     if not result:
         return
 
