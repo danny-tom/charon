@@ -22,7 +22,9 @@ jobs:
 
     # Runs a single command using the runners shell
     - name: Run a one-line script
-      run: pip install pyopenssl
+      run: |
+        pip install pyopenssl
+        CLOUDSDK_PYTHON_SITEPACKAGES=1
 
     - name: Setup gcloud environment
       uses: GoogleCloudPlatform/github-actions@0.1.2
