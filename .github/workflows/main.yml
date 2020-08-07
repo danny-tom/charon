@@ -42,8 +42,8 @@ jobs:
         GCLOUD_COMPUTE_INSTANCE: ${{ secrets.GCLOUD_COMPUTE_INSTANCE}}
         PRODUCTION_TOKEN: ${{ secrets.TEST_TOKEN}}
       run: |
-        PRODUCTION_TOKEN=$PRODUCTION_TOKEN
         gcloud compute ssh $GCLOUD_COMPUTE_INSTANCE
+        export PRODUCTION_TOKEN=$PRODUCTION_TOKEN
         git clone -b auto-deploy-master --single-branch https://github.com/danny-tom/charon.git
         cd charon
         chmod +x scripts/restart-bot.sh
