@@ -43,4 +43,5 @@ jobs:
       run: |
         gcloud compute ssh $GCLOUD_COMPUTE_INSTANCE
         cd $GITHUB_WORKSPACE
+        chmod +x scripts/restart-bot.sh
         ./scripts/restart-bot.sh
