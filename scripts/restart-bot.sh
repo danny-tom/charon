@@ -21,7 +21,7 @@ then
 fi
 
 # Replace the TOKEN with our secret
-sed 's/###TOKEN HERE###/"$PRODUCTION_TOKEN"/g' .env
+sed -i "s/###TOKEN HERE###/$PRODUCTION_TOKEN/g" .env
 
 # Start new tmux and run the process
 tmux new -d
