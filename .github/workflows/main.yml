@@ -47,4 +47,3 @@ jobs:
         cd charon
         chmod +x scripts/restart-bot.sh
         ./scripts/restart-bot.sh
-        sleep 120

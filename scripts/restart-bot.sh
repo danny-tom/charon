@@ -1,4 +1,5 @@
 #! /bin/sh
+set -euo pipefail
 
 # Kill the running processes of tmux if present
 if pgrep tmux
