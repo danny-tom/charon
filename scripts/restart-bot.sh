@@ -8,6 +8,8 @@ then
 fi
 
 # Install the dependencies
+pip3 install -U pip3 setuptools
+
 if ! pip3 list | grep python-dotenv 
 then
     echo $(pip3 install --user python-dotenv)
