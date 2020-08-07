@@ -40,7 +40,9 @@ jobs:
     - name: SSH into the instance
       env: 
         GCLOUD_COMPUTE_INSTANCE: ${{ secrets.GCLOUD_COMPUTE_INSTANCE}}
-      run: gcloud compute ssh $GCLOUD_COMPUTE_INSTANCE
+      run: |
+        gcloud compute ssh $GCLOUD_COMPUTE_INSTANCE
+        y
 
     # Run the restart script in the Gcloud ssh session
     # - name: Run restart script
