@@ -2,6 +2,7 @@
 
 # Kill the running processes of tmux if present
 if pgrep tmux
+then
     sudo pkill tmux
 fi
 
