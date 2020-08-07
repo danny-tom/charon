@@ -42,8 +42,8 @@ jobs:
         GCLOUD_COMPUTE_INSTANCE: ${{ secrets.GCLOUD_COMPUTE_INSTANCE}}
         PRODUCTION_TOKEN: ${{ secrets.TEST_TOKEN}}
       run: |
-        echo $(gcloud compute ssh $GCLOUD_COMPUTE_INSTANCE)
-        echo $(cd $GITHUB_WORKSPACE)
-        echo $(chmod +x scripts/restart-bot.sh)
-        echo $(./scripts/restart-bot.sh)
-        
+        gcloud compute ssh $GCLOUD_COMPUTE_INSTANCE
+        git clone https://github.com/danny-tom/charon.git
+        cd charon
+        chmod +x scripts/restart-bot.sh
+        ./scripts/restart-bot.sh
