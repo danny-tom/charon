@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: CI
+name: Deploy Bot
 
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the auto-deploy-master branch
@@ -20,8 +20,8 @@ jobs:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v2
 
-    # Runs a single command using the runners shell
-    - name: Run a one-line script
+    # Install PyOpenSSL required for Gcloud Setup
+    - name: Install dependencies
       run: sudo apt-get install python-openssl
 
     - name: Setup gcloud environment
@@ -34,8 +34,10 @@ jobs:
         project_id: ${{ secrets.GCLOUD_PROJECT_ID }}
         service_account_key: ${{ secrets.GCLOUD_SERVICE_ACCOUNT_KEY }}
         export_default_credentials: true
-    - run: gcloud compute ssh $GCLOUD_COMPUTE_INSTANCE
+    - run: gcloud compute instance list
 
     # Run the restart script in the Gcloud ssh session
-    - name: Run restart script
-      run: ./scripts/restart-bot.sh
+    # - name: Run restart script
+    #   run: |
+    #       cd $GITHUB_WORKSPACE
+    #       ./scripts/restart-bot.sh
