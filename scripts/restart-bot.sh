@@ -2,24 +2,24 @@
 set -euo pipefail
 
 # Kill the running processes of tmux if present
-if pgrep tmux
+if ! pgrep tmux
 then
-    sudo pkill tmux
+    echo $(sudo pkill tmux)
 fi
 
 # Install the dependencies
-if pip3 list | grep python3-dotenv
+if ! pip3 list | grep python-dotenv 
 then
-    pip3 install python-dotenv
+    echo $(pip3 install python-dotenv)
 fi
 
-if  pip3 list | grep discord.py
+if ! pip3 list | grep discord.py
 then
-    pip3 install discord.py
+    echo $(pip3 install discord.py)
 fi
 
 # Replace the TOKEN with our secret
-sed -i 's/###TOKEN HERE###/$PRODUCTION_TOKEN/g' .env
+sed "s/###TOKEN HERE###/$PRODUCTION_TOKEN/g" .env
 
 # Start new tmux and run the process
 tmux new -d
