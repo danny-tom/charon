@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/bash
 set -euo pipefail
 
 # Kill the running processes of tmux if present
