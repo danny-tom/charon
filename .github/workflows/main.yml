@@ -43,7 +43,7 @@ jobs:
         PRODUCTION_TOKEN: ${{ secrets.TEST_TOKEN}}
       run: |
         gcloud compute ssh $GCLOUD_COMPUTE_INSTANCE
-        git clone https://github.com/danny-tom/charon.git
+        git clone https://github.com/danny-tom/charon.git:auto-deploy-master
         cd charon
         ls
         chmod +x scripts/restart-bot.sh
