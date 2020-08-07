@@ -25,17 +25,15 @@ jobs:
       run: sudo apt-get install python-openssl
 
     - name: Setup gcloud environment
-      uses: GoogleCloudPlatform/github-actions@0.1.2
+      uses: GoogleCloudPlatform/github-actions@master
       env:
         GCLOUD_COMPUTE_INSTANCE: ${{ secrets.GCLOUD_COMPUTE_INSTANCE}}
         CLOUDSDK_PYTHON_SITEPACKAGES: 1
       with:
-        # The version of the gcloud SDK to be installed.  Example: 275.0.0
-        version: # optional, default is 275.0.0
-        # The service account email which will be used for authentication.
-        service_account_email: ${{ secrets.GCLOUD_SERVICE_ACCOUNT_EMAIL }}
-        # The service account key which will be used for authentication.
+        version: '290.0.1'
+        project_id: ${{ secrets.GCLOUD_PROJECT_ID }}
         service_account_key: ${{ secrets.GCLOUD_SERVICE_ACCOUNT_KEY }}
+        export_default_credentials: true
     - run:
         gcloud compute ssh $GCLOUD_COMPUTE_INSTANCE
 
