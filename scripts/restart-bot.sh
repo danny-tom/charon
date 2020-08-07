@@ -10,12 +10,12 @@ fi
 # Install the dependencies
 if ! pip3 list | grep python-dotenv 
 then
-    echo $(pip3 install python-dotenv)
+    echo $(pip3 install --user python-dotenv)
 fi
 
 if ! pip3 list | grep discord.py
 then
-    echo $(pip3 install discord.py)
+    echo $(pip3 install --user discord.py)
 fi
 
 # Replace the TOKEN with our secret
