@@ -45,6 +45,6 @@ jobs:
         gcloud compute ssh $GCLOUD_COMPUTE_INSTANCE
         git clone -b auto-deploy-master --single-branch https://github.com/danny-tom/charon.git
         cd charon
-        ls
         chmod +x scripts/restart-bot.sh
         ./scripts/restart-bot.sh
+        sleep 120
