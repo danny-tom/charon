@@ -34,7 +34,7 @@ jobs:
         project_id: ${{ secrets.GCLOUD_PROJECT_ID }}
         service_account_key: ${{ secrets.GCLOUD_SERVICE_ACCOUNT_KEY }}
         export_default_credentials: true
-    - run: gcloud compute instance list
+    - run: gcloud compute instances list
 
     # Run the restart script in the Gcloud ssh session
     # - name: Run restart script
