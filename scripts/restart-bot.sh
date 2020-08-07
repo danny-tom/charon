@@ -18,11 +18,11 @@ then
 fi
 
 # Clone the repository
-git clone https://https://github.com/danny-tom/charon.git
+git clone https://github.com/danny-tom/charon.git
 cd charon
 
 # Replace the TOKEN with our secret
-sed -i's/###TOKEN HERE###/{PRODUCTION_TOKEN}/g' .env
+sed -i 's/###TOKEN HERE###/{PRODUCTION_TOKEN}/g' .env
 
 # Start new tmux and run the process
 tmux new -d
