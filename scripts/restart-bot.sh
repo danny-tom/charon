@@ -22,6 +22,6 @@ fi
 sed -i "s/###TOKEN HERE###/$PRODUCTION_TOKEN/g" .env
 
 # Start new tmux and run the process
-tmux new -d -s charon
-tmux send-keys -t charon "python3 charon.py" ENTER
+sudo -u danny tmux new -d -s charon
+sudo -u danny tmux send-keys -t charon "python3 charon.py" ENTER
 exit
