@@ -46,4 +46,4 @@ jobs:
         git clone -b auto-deploy-master --single-branch https://github.com/danny-tom/charon.git
         cd charon
         chmod +x scripts/restart-bot.sh
-        nohup ./scripts/restart-bot.sh
+        nohup ./scripts/restart-bot.sh >./nohup.out 2>./nohup.err&
