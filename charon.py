@@ -5,12 +5,14 @@ from dotenv import load_dotenv
 import roles
 import re
 import random
+import logging
 
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 COMMAND_PREFIX = '.'
 
+logging.basicConfig(level=logging.INFO)
 bot = discord.ext.commands.Bot(COMMAND_PREFIX)
 
 lowerList = [e.casefold() for e in roles.ROLES_LIST]
