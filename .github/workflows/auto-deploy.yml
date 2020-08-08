@@ -1,0 +1,50 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Deploy Bot
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the auto-deploy-master branch
+on:
+  push:
+    branches: [ auto-deploy-master ]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    # - uses: actions/checkout@v2
+
+    # Install PyOpenSSL required for Gcloud Setup
+    - name: Install dependencies
+      run: sudo apt-get install python-openssl
+
+    # Copied from https://github.com/GoogleCloudPlatform/github-actions/tree/master
+    # /setup-gcloud#usage
+    - name: Setup gcloud environment
+      uses: GoogleCloudPlatform/github-actions@master
+      env:
+        CLOUDSDK_PYTHON_SITEPACKAGES: 1
+      with:
+        version: '290.0.1'
+        project_id: ${{ secrets.GCLOUD_PROJECT_ID }}
+        service_account_key: ${{ secrets.GCLOUD_SERVICE_ACCOUNT_KEY }}
+        export_default_credentials: true
+
+    # SSH into the instance and run the restart script
+    - name: SSH in and run restart script
+      env: 
+        GCLOUD_COMPUTE_INSTANCE: ${{ secrets.GCLOUD_COMPUTE_INSTANCE}}
+        PRODUCTION_TOKEN: ${{ secrets.TEST_TOKEN}}
+      run: |
+        gcloud compute ssh $GCLOUD_COMPUTE_INSTANCE
+        export PRODUCTION_TOKEN=$PRODUCTION_TOKEN
+        git clone -b auto-deploy-master --single-branch https://github.com/danny-tom/charon.git
+        cd charon
+        chmod +x scripts/restart-bot.sh
+        ./scripts/restart-bot.sh

@@ -2,10 +2,7 @@
 set -euo pipefail
 
 # Kill the running processes of tmux if present
-if ! pgrep tmux
-then
-    echo $(sudo pkill tmux)
-fi
+./kill-bot.sh
 
 # Install the dependencies
 pip3 install -U pip setuptools
