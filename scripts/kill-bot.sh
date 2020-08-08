@@ -1,7 +1,7 @@
 #! /bin/bash
 
 # Kill the running processes of tmux if present
-if pgrep tmux
+if pgrep charon.py
 then
-    echo $(sudo pkill tmux)
+    echo $(sudo pkill charon.py)
 fi
