@@ -2,8 +2,8 @@
 set -euo pipefail
 
 # Kill the running processes of tmux if present
-chmod +x kill-bot.sh
-sh ./kill-bot.sh
+chmod +x $(dirname "$0")/kill-bot.sh
+sh $(dirname "$0")/kill-bot.sh
 
 # Install the dependencies
 pip3 install -U pip setuptools
