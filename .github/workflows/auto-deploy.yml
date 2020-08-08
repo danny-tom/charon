@@ -46,3 +46,4 @@ jobs:
         chmod +x scripts/restart-bot.sh
         ./scripts/restart-bot.sh
         tmux list-sessions
+        echo sleep 120
