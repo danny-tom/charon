@@ -21,6 +21,5 @@ fi
 # Replace the TOKEN with our secret
 sed -i "s/###TOKEN HERE###/$PRODUCTION_TOKEN/g" .env
 
-# Start new tmux and run the process
-nohup tmux new -d -s charon
-nohup tmux send-keys -t charon "nohup python3 charon.py" ENTER
+# Run the daemon
+sudo systemctl start charon
