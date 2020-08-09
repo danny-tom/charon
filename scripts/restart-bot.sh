@@ -22,4 +22,4 @@ fi
 sed -i "s/###TOKEN HERE###/$PRODUCTION_TOKEN/g" .env
 
 # Run the daemon
-sudo systemctl --full --type service --all
+sudo systemctl list-units --type service
