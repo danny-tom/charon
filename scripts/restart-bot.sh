@@ -22,4 +22,5 @@ fi
 sed -i "s/###TOKEN HERE###/$PRODUCTION_TOKEN/g" .env
 
 # Run the daemon
-sudo systemctl list-units --type service -all
+echo $(sudo ls /etc/systemd/system)
+echo $(sudo ls /usr/lib/systemd/user)
