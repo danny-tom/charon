@@ -4,7 +4,9 @@ import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 import roles
+import party
 import random
+import asyncio
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -12,20 +14,22 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 COMMAND_PREFIX = '.'
 bot = commands.Bot(command_prefix=COMMAND_PREFIX)
 
+parties = []
+
 # returns the role regardless of input case-sensitivity
 # returns None if no match can be found
-def getRoleID(roles, roleName):
+def getRole(roles, roleName):
     for r in roles:
         if roleName.lower() == str(r).lower():
             return r
     return None
 
 # restricts roles that can be picked based on roles.py
-def isRestrictedRole(role):
+def isGamesRole(role):
     for validRole in roles.ROLES_LIST:
-        if validRole.lower() == str(role).lower():
-            return False
-    return True
+        if validRole.name.lower() == str(role).lower():
+            return True
+    return False
 
 # On any message, if the exact text is '.iam valorant' or
 # '.iamnot valorant', the bot will grant the role matching the String
@@ -35,81 +39,72 @@ def isRestrictedRole(role):
 description=f'''\"{COMMAND_PREFIX}iam SomeRole\" - Add yourself to SomeRole''')
 async def iam(context, *arg):
     if len(arg) == 0:
-        await context.channel.send(
+        return await context.channel.send(
             f'{context.author.name}, please tell me what role to use for iam')
-        return
 
-    role = getRoleID(context.guild.roles, arg[0])
+    role = getRole(context.guild.roles, arg[0])
 
     if role == None:
-        await context.channel.send(
+        return await context.channel.send(
             f'{context.author.name}, role \'{arg[0]}\' does not exist')
-        return
 
-    if isRestrictedRole(role):
-        await context.channel.send(
+    if not isGamesRole(role):
+        return await context.channel.send(
             f'{context.author.name}, {role} is a restricted role')
-        return
 
     if role in context.author.roles:
-        await context.channel.send(
+        return await context.channel.send(
             f'{context.author.name}, but you are already {role}')
-    else:
-        await context.author.add_roles(role)
-        await context.channel.send(
-            f'{context.author.name}, you are granted {role}')
+
+    await context.author.add_roles(role)
+    await context.channel.send(
+        f'{context.author.name}, you are granted {role}')
         
 @bot.command(name='iamnot', brief='Remove yourself from SomeRole',
 description=f'''\"{COMMAND_PREFIX}iamnot SomeRole\" - Remove yourself from SomeRole''')
 async def iamnot(context, *arg):
     if len(arg) == 0:
-        await context.channel.send(
+        return await context.channel.send(
             f'{context.author.name}, please tell me what role to use for iamnot')
-        return
 
-    role = getRoleID(context.guild.roles, arg[0])
+    role = getRole(context.guild.roles, arg[0])
 
     if role == None:
-        await context.channel.send(
+        return await context.channel.send(
             f'{context.author.name}, role \'{arg[0]}\' does not exist')
-        return
 
-    if role in context.author.roles:
-        await context.author.remove_roles(role)
-        await context.channel.send(
-            f'{context.author.name}, you are removed from {role}')
-    else:
-        await context.channel.send(
+    if role not in context.author.roles:
+        return await context.channel.send(
             f'{context.author.name}, but you were never {role}')
+
+    await context.author.remove_roles(role)
+    await context.channel.send(
+        f'{context.author.name}, you are removed from {role}')      
 
 @bot.command(name='whois', brief='Prints users belonging to role',
 description=f'''\"{COMMAND_PREFIX}whois SomeRole\" - Prints a list of users belonging to SomeRole''')
 async def whois(context, *arg):
     if len(arg) == 0:
-        await context.channel.send(
+        return await context.channel.send(
             f'{context.author.name}, please tell me what role to use for whois')
-        return
 
-    role = getRoleID(context.guild.roles, arg[0])
+    role = getRole(context.guild.roles, arg[0])
 
     if role == None:
-        await context.channel.send(
+        return await context.channel.send(
             f'{context.author.name}, role \'{arg[0]}\' does not exist')
-        return
 
     members = sorted(list(member.name for member in role.members), key=str.casefold)
 
     if len(members) == 0:
-        await context.channel.send(
+        return await context.channel.send(
             f'{context.author.name}, {role} has no users')
-        return
 
-    memberStr = "\n".join(members)
-
+    # prepend \n because code block bug removes first member
+    memberStr = "\n" + "\n".join(members)
     await context.channel.send(
-        f'{context.author.name}, here is the list of users in '
-        f'{role} you requested:'
-        f'```{memberStr}```')
+        f'{context.author.name}, here is the list of users in ' \
+        f'{role} you requested: ```{memberStr}```')
 
 # Lists out games supported 
 @bot.command(name='games', brief='Prints my supported roles',
@@ -123,14 +118,13 @@ async def games(context):
 
     # Add valid roles to our display
     for role in context.guild.roles:
-        if not isRestrictedRole(role):
+        if isGamesRole(role):
             games.append([str(role), str(len(role.members))])
             if len(str(role)) > longestRole:
                 longestRole = len(str(role))
 
     if len(games) == 0:
-        await context.channel.send(f'{context.author.name}, I manage no games here')
-        return
+        return await context.channel.send(f'{context.author.name}, I manage no games here')
     
     formatter = "{:<"+str(longestRole+padding)+"}({})\n"
     gamesToStr = ""
@@ -138,6 +132,43 @@ async def games(context):
         gamesToStr += formatter.format(pair[0], pair[1])
     await context.channel.send(f'{context.author.name}, here is a list of the' \
         f' roles that I manage: ```{gamesToStr}```')
+
+@bot.command(name='party', brief='Creates a party people can join',
+description=f'''\"{COMMAND_PREFIX}party Role\" - Creates party creator for specific Role with presets\n \
+\"{COMMAND_PREFIX}party SomeName OptionalSize\" - Creates a custom party of SomeName and OptionalSize (default size will be 4)''')
+async def createParty(context, *args):
+    if len(args) == 0:
+        return await context.channel.send(f'{context.author.name}, please include a party name and optional party size (default size is {party.DEFAULT_PARTY_SIZE} or preset)')
+
+    name = args[0]
+
+    if name.isspace() or len(name) == 0:
+        return await context.channel.send('Please type a valid party name')
+
+    try:
+        size = int(args[1]) if len(args) >= 2 else None
+    except ValueError:
+        return await context.channel.send('Ensure that party size is a number')
+
+    if len(name) > 256:
+        return await context.channel.send('Your party name is too long. (256 characters please)')
+    
+    if size is not None and size <= 0:
+        return await context.channel.send('Your party size is too small.')
+
+    role = getRole(context.guild.roles, name)
+
+    if role is not None and isGamesRole(role):
+        message = await context.channel.send(role.mention)
+    else:
+        message = await context.channel.send(embed=discord.Embed())
+    
+    newParty = party.party(message, context.author, name) if size is None else party.party(message, context.author, name, size)
+    parties.append(newParty)
+
+    await message.edit(embed = newParty.getEmbed())
+    await message.add_reaction(newParty.joinEmoji)
+    await message.add_reaction(newParty.closeEmoji)
 
 @bot.event
 async def on_member_join(member):
@@ -151,4 +182,44 @@ async def on_member_join(member):
         f'Feel free to dial \"{COMMAND_PREFIX}help\" if you require any assistance.\n'
         f'...and as always, it is a pleasure having you with us again, {member.name}.')
 
+@bot.event
+async def on_reaction_add(reaction, user):
+    global parties
+    for party in parties:
+        if user.name == bot.user.name:
+            continue
+        if party.isMatchJoinEmoji(reaction):
+            party.addMember(user.name)
+            await reaction.message.edit(embed = party.getEmbed())
+            break
+        if party.isMatchCloseEmoji(reaction, user):
+            party.close()
+            await reaction.message.edit(embed = party.getEmbed())
+            parties.remove(party)
+            break
+
+@bot.event
+async def on_reaction_remove(reaction, user):
+    for party in parties:
+        if party.isMatchJoinEmoji(reaction):
+            party.removeMember(user.name)
+            await reaction.message.edit(embed = party.getEmbed())
+            break
+
+# seconds of running background loop
+BACKGROUND_LOOP_TIME = 60
+# This function checks if parties are inactive
+# and cleans up them up if they are
+async def update_parties():
+    await bot.wait_until_ready()
+    while True:
+        global parties
+        for party in parties:
+            if party.isInactive():
+                await party.message.edit(embed = party.getEmbed())
+                parties.remove(party)
+
+        await asyncio.sleep(BACKGROUND_LOOP_TIME)
+
+bot.loop.create_task(update_parties())
 bot.run(TOKEN)
