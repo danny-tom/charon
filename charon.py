@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 import roles
 import party
 import random
+import logging
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -14,6 +15,8 @@ COMMAND_PREFIX = '.'
 bot = commands.Bot(command_prefix=COMMAND_PREFIX)
 
 parties = []
+
+logging.basicConfig(level=logging.INFO)
 
 # returns the role regardless of input case-sensitivity
 # returns None if no match can be found
