@@ -10,10 +10,11 @@ DEFAULT_PARTY_SIZE = 4
 DEFAULT_JOIN_EMOJI = '👍'
 DEFAULT_CLOSE_EMOJI = '❌'
 
+
 class party:
     def __init__(self, message, leader, name, size=None):
         self.__close = False
-        self.__message = message
+        self.message = message
         self.__leader = leader
         self.__creationDateTime = datetime.now()
         self.__partyList = [leader.name]
@@ -37,7 +38,7 @@ class party:
     @staticmethod
     def __getPreset(name):
         for preset in roles.ROLES_LIST:
-            if name.lower() == preset.name.lower():
+            if name.casefold() == preset.name.casefold():
                 return preset
         return None
 
@@ -61,16 +62,17 @@ class party:
             self.__partyList.append(self.__waitlist.pop(0))
 
     def isMatchJoinEmoji(self, reaction):
-        return (self.__message.id == reaction.message.id
+        return (self.message.id == reaction.message.id
                 and self.joinEmoji == reaction.emoji)
 
     def isMatchCloseEmoji(self, reaction, user):
-        return (self.__message.id == reaction.message.id
+        return (self.message.id == reaction.message.id
                 and self.closeEmoji == reaction.emoji
                 and self.__leader.name == user.name)
 
     def isInactive(self):
-        return (datetime.now() - self.__creationDateTime).total_seconds() > ACTIVE_DURATION_SECONDS
+        return ((datetime.now() - self.__creationDateTime).total_seconds()
+                > ACTIVE_DURATION_SECONDS)
 
     def close(self):
         self.__close = True
@@ -80,21 +82,25 @@ class party:
 
         if self.__close:
             embed.title = f'{self.name} (Closed)'
-            embed.description = f'This party was closed by {self.__leader.name}'
+            embed.description = ('This party was closed by '
+                                 f'{self.__leader.name}.')
         elif self.isInactive():
             embed.title = f'{self.name} (Inactive)'
-            embed.description = f'This party is inactive because it is old.\nPlease create a new party'
+            embed.description = ('This party is inactive because it is old.'
+                                 '\nPlease create a new party.')
         else:
             embed.title = f'{self.name}'
-            embed.description = f'Add yourself to the party by using reaction \"{self.joinEmoji}\"\n'
+            embed.description = ('Add yourself to the party by using reaction '
+                                 f'\"{self.joinEmoji}\"\n')
             embed.add_field(
-                name=f'Party Members ({len(self.__partyList)}/{self.size})', 
-                value="\n".join(self.__partyList) if len(self.__partyList) > 0 else '👻...', 
+                name=f'Party Members ({len(self.__partyList)}/{self.size})',
+                value="\n".join(self.__partyList) if len(
+                    self.__partyList) > 0 else '👻...',
                 inline=True)
             if (len(self.__waitlist) > 0):
                 embed.add_field(
-                    name=f'Waitlist', 
-                    value="\n".join(self.__waitlist), 
+                    name='Waitlist',
+                    value="\n".join(self.__waitlist),
                     inline=True)
             if self.imageURL is not None:
                 embed.set_thumbnail(url=self.imageURL)
