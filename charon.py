@@ -1,224 +1,261 @@
 # charon.py
 import os
-import discord.ext.commands.bot
+import discord
+from discord.ext import tasks, commands
 from dotenv import load_dotenv
 import roles
-import re
+import party
 import random
 import logging
 
-
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
+
 COMMAND_PREFIX = '.'
+bot = commands.Bot(command_prefix=COMMAND_PREFIX)
+
+parties = []
 
 logging.basicConfig(level=logging.INFO)
-bot = discord.ext.commands.Bot(COMMAND_PREFIX)
 
-lowerList = [e.casefold() for e in roles.ROLES_LIST]
+# returns the role regardless of input case-sensitivity
+# returns None if no match can be found
+
+
+def getRole(roles, roleName):
+    for r in roles:
+        if roleName.casefold() == str(r).casefold():
+            return r
+    return None
+
+# restricts roles that can be picked based on roles.py
+
+
+def isGamesRole(role):
+    for validRole in roles.ROLES_LIST:
+        if validRole.name.casefold() == str(role).casefold():
+            return True
+    return False
 
 # On any message, if the exact text is '.iam valorant' or
 # '.iamnot valorant', the bot will grant the role matching the String
 # stored in roles.py. The bot will message on errors such as
 # role name not found in server or the bot does not have enough permissions
 
-def iam_helper(message):
-    roleInput = message.content.split(" ", 1)[1]
-    # Ignore case sensitivity for the role
-    if roleInput.casefold() in lowerList:
-        roleIndex = lowerList.index(roleInput.casefold())
-        newRole = discord.utils.get(message.guild.roles,
-                                    name=roles.ROLES_LIST[roleIndex])
-        return True, newRole, roleIndex
-    return False, "", -1
 
-async def iam(message):
+@bot.command(name='iam', brief='Add yourself to SomeRole',
+             description=f'''\"{COMMAND_PREFIX}iam SomeRole\" - '
+             'Add yourself to SomeRole''')
+async def iam(context, *arg):
+    if len(arg) == 0:
+        return await context.channel.send(
+            f'{context.author.name}, please tell me what role to use for iam')
+
+    role = getRole(context.guild.roles, arg[0])
+
+    if role is None:
+        return await context.channel.send(
+            f'{context.author.name}, role \'{arg[0]}\' does not exist')
+
+    if not isGamesRole(role):
+        return await context.channel.send(
+            f'{context.author.name}, {role} is a restricted role')
+
+    if role in context.author.roles:
+        return await context.channel.send(
+            f'{context.author.name}, but you are already {role}')
+
+    await context.author.add_roles(role)
+    await context.channel.send(
+        f'{context.author.name}, you are granted {role}')
+
+
+@bot.command(name='iamnot', brief='Remove yourself from SomeRole',
+             description=f'''\"{COMMAND_PREFIX}iamnot SomeRole\" - '
+             'Remove yourself from SomeRole''')
+async def iamnot(context, *arg):
+    if len(arg) == 0:
+        return await context.channel.send(
+            f'{context.author.name}, please tell me what role to use for '
+            'iamnot')
+
+    role = getRole(context.guild.roles, arg[0])
+
+    if role is None:
+        return await context.channel.send(
+            f'{context.author.name}, role \'{arg[0]}\' does not exist')
+
+    if role not in context.author.roles:
+        return await context.channel.send(
+            f'{context.author.name}, but you were never {role}')
+
+    await context.author.remove_roles(role)
+    await context.channel.send(
+        f'{context.author.name}, you are removed from {role}')
+
+
+@bot.command(name='whois', brief='Prints users belonging to role',
+             description=f'''\"{COMMAND_PREFIX}whois SomeRole\" - Prints a '
+             'list of users belonging to SomeRole''')
+async def whois(context, *arg):
+    if len(arg) == 0:
+        return await context.channel.send(f'{context.author.name}, '
+                                          'please tell me what role to '
+                                          'use for whois')
+
+    role = getRole(context.guild.roles, arg[0])
+
+    if role is None:
+        return await context.channel.send(
+            f'{context.author.name}, role \'{arg[0]}\' does not exist')
+
+    members = sorted(
+        list(member.name for member in role.members), key=str.casefold)
+
+    if len(members) == 0:
+        return await context.channel.send(
+            f'{context.author.name}, {role} has no users')
+
+    # prepend \n because code block bug removes first member
+    memberStr = "\n" + "\n".join(members)
+    await context.channel.send(
+        f'{context.author.name}, here is the list of users in '
+        f'{role} you requested: ```{memberStr}```')
+
+# Lists out games supported
+
+
+@bot.command(name='games', brief='Prints my supported roles',
+             description=f'''\"{COMMAND_PREFIX}games\" - '
+             'Prints a list of my supported roles''')
+async def games(context):
+    games = []
+
+    # Variables are used for string formatting purposes
+    longestRole = 0
+    padding = 1
+
+    # Add valid roles to our display
+    for role in context.guild.roles:
+        if isGamesRole(role):
+            games.append([str(role), str(len(role.members))])
+            if len(str(role)) > longestRole:
+                longestRole = len(str(role))
+
+    if len(games) == 0:
+        return await context.channel.send(f'{context.author.name}, '
+                                          'I manage no games here')
+
+    formatter = "{:<"+str(longestRole+padding)+"}({})\n"
+    gamesToStr = ""
+    for pair in games:
+        gamesToStr += formatter.format(pair[0], pair[1])
+    await context.channel.send(f'{context.author.name}, here is a list of the'
+                               f' roles that I manage: ```{gamesToStr}```')
+
+
+@bot.command(name='party', brief='Creates a party people can join',
+             description=f'''\"{COMMAND_PREFIX}party Role\" - '
+             'Creates party creator for specific Role with presets\n \
+\"{COMMAND_PREFIX}party SomeName OptionalSize\" - '
+'Creates a custom party of SomeName and OptionalSize '
+'(default size will be 4)''')
+async def createParty(context, *args):
+    if len(args) == 0:
+        return await context.channel.send(
+            f'{context.author.name}, please include a party name and optional '
+            f'party size (default size is {party.DEFAULT_PARTY_SIZE} '
+            'or preset)')
+
+    name = args[0]
+
+    if name.isspace() or len(name) == 0:
+        return await context.channel.send('Please type a valid party name')
+
     try:
-        role_found, newRole, index = iam_helper(message)
+        size = int(args[1]) if len(args) >= 2 else None
+    except ValueError:
+        return await context.channel.send('Ensure that party size is a number')
 
-        if (role_found):
-            try:
-                if(newRole not in message.author.roles):
-                    await message.author.add_roles(newRole)
-                    await message.channel.send(
-                        f'{message.author.name}, you are granted'
-                        f' {roles.ROLES_LIST[index]}')
-                else:
-                    await message.channel.send(
-                        f'{message.author.name}, but you are already'
-                        f' {roles.ROLES_LIST[index]}')
-            except AttributeError:
-                await message.channel.send(
-                    f'{message.author.name}, that role does not exist or'
-                    ' I have not been given permission to grant you that'
-                    ' role')
-        else:
-            await message.channel.send(
-                f'{message.author.name}, that role does not exist')
-    except IndexError:
-        await message.channel.send(
-            f'{message.author.name}, please tell me what role to use for iam')
+    if len(name) > 256:
+        return await context.channel.send('Your party name is too long. '
+                                          '(256 characters please)')
 
+    if size is not None and size <= 0:
+        return await context.channel.send('Your party size is too small.')
 
-async def iamnot(message):
-    try:
-        role_found, newRole, index = iam_helper(message)
-            
-        if (role_found):
-            try:
-                if(newRole in message.author.roles):
-                    await message.author.remove_roles(newRole)
-                    await message.channel.send(
-                        f'{message.author.name}, you are removed from'
-                        f' {roles.ROLES_LIST[index]}')
-                else:
-                    await message.channel.send(
-                        f'{message.author.name}, but you were never'
-                        f' {roles.ROLES_LIST[index]}')
-            except AttributeError:
-                await message.channel.send(
-                    f'{message.author.name}, that role does not exist or I'
-                    'have not been given permission to grant you that'
-                    ' role')
-        else:
-            await message.channel.send(
-                f'{message.author.name}, that role does not exist')
-    except IndexError:
-        await message.channel.send(
-            f'{message.author.name}, please tell me what role to use for iamnot')
+    role = getRole(context.guild.roles, name)
 
-async def whois(message):
-    # After the command, the 2nd part is the role name
-    try:
-        roleInput = message.content.split(" ", 1)[1]
-
-        # Ignore case sensitivity for the role
-        # Check if the bot has should be able to give that particular role
-        # information
-        try:
-            index = lowerList.index(roleInput.casefold())
-            searchedRole = discord.utils.get(message.guild.roles,
-                                                name=roles.ROLES_LIST[index])
-        except ValueError:
-            await message.channel.send(
-                f'{message.author.name}, that role does not exist or I have'
-                ' not been given permission to give you that information')
-
-        if roleInput.casefold() in lowerList:
-            try:
-                membersList = searchedRole.members
-                membersWithRole = list(member.name for member in membersList)
-                sortedList = sorted(membersWithRole, key=str.casefold)
-                membersWithRoleStr = "\n"
-                membersWithRoleStr = membersWithRoleStr.join(sortedList)
-                await message.channel.send(
-                    f'{message.author.name}, here is the list of users in'
-                    f' {roles.ROLES_LIST[index]} you requested:'
-                    f'```{membersWithRoleStr}```')
-            except AttributeError:
-                await message.channel.send(
-                    f'{message.author.name}, that role does not exist or I'
-                    ' have not been given permission to give you that'
-                    ' information')
-    except IndexError:
-        await message.channel.send(
-            f'{message.author.name}, please tell me what role to use for whois')
-
-async def games(message):
-    sortedList = sorted(roles.ROLES_LIST, key=str.casefold)
-    registeredUsersList = []
-    newGamesList = []
-
-    try:
-        for role in sortedList:
-            if discord.utils.get(message.guild.roles, name=role) is None:
-                pass
-            else:
-                registeredUsers = len(discord.utils.get(
-                    message.guild.roles, name=role).members)
-                newGamesList.append(role)
-                registeredUsersList.append(registeredUsers)
-
-        gameAndCount = list(zip(newGamesList, registeredUsersList))
-        gameAndCountStr = "\n"
-
-        for pair in gameAndCount:
-            gameAndCountStr += pair[0] + '\t(' + str(pair[1]) + ')\n'
-
-        outputString = f'{message.author.name}, here is a list of the' \
-            f' roles that I manage: ```{gameAndCountStr}```'
-
-        if len(gameAndCount) == 0:
-            await message.channel.send(f'{message.author.name}, I manage'
-                                        ' no games here')
-        else:
-            await message.channel.send(outputString)
-
-    except AttributeError:
-        await message.channel.send(
-            f'{message.author.name}, there was an issue finding the games'
-            'that this server supports')
-
-
-async def charon_help(message):
-    command_list = '\n'+'\n'.join(LIST_OF_COMMANDS.keys())
-
-    if (message.content.count(" ") == 1):
-        command = message.content.split(" ")[1]
-        if (command in LIST_OF_COMMANDS.keys()):
-            await message.channel.send(f'{message.author.name}, here is what I know' 
-                f' about {command}: ```{LIST_OF_COMMANDS[command].__doc__}```')
-        else:
-            await message.channel.send(f'{message.author.name}, I have not heard of ' 
-                'that command. Here is a list of the commands that I know:'
-                f'```{command_list}```')
+    if role is not None and isGamesRole(role):
+        message = await context.channel.send(role.mention)
     else:
-        await message.channel.send(f'{message.author.name}, Here is a list of the '
-            f'commands that I know: ```{command_list}```')
+        message = await context.channel.send(embed=discord.Embed())
 
+    newParty = (party.party(message, context.author, name) if size is None
+                else party.party(message, context.author, name, size))
+    parties.append(newParty)
 
-LIST_OF_COMMANDS = {
-    "iam":iam,
-    "iamnot":iamnot,
-    "whois":whois,
-    "games":games,
-    "help":charon_help
-                    }
+    await message.edit(embed=newParty.getEmbed())
+    await message.add_reaction(newParty.joinEmoji)
+    await message.add_reaction(newParty.closeEmoji)
 
-iam.__doc__ = f'''Usage: \"{COMMAND_PREFIX}iam SomeRole\" - Add yourself to SomeRole'''
-iamnot.__doc__ = f'''Usage: \"{COMMAND_PREFIX}iamnot SomeRole\" - Remove yourself from SomeRole'''
-whois.__doc__ = f'''Usage: \"{COMMAND_PREFIX}whois SomeRole\" - Prints a list of users belonging to SomeRole'''
-games.__doc__ = f'''Usage: \"{COMMAND_PREFIX}games\" - Prints a list of my supported roles'''
-charon_help.__doc__ = f'''Usage: \"{COMMAND_PREFIX}help\" - Prints a list of supported commands\n\
-    \"{COMMAND_PREFIX}help SomeCommand\" - Prints help for SomeCommand'''
-
-@bot.event
-async def on_message(message):
-    # Messages that should bring up the "unrecognized command" reply: ".foo", "."
-    # Messages that should not: "..", "..."
-    result = re.match(f'^\{COMMAND_PREFIX}([a-zA-Z0-9]+)', message.content)
-    if not result:
-        return
-
-    command = result.group(1)
-    if command in LIST_OF_COMMANDS.keys():
-        # See above for command functions
-        await LIST_OF_COMMANDS[command](message)
-    else:
-        await message.channel.send(
-            f'{message.author.name}, that is an unrecognized command.\n'
-            f'For a list of supported commands, please send \"{COMMAND_PREFIX}help\"')
 
 @bot.event
 async def on_member_join(member):
-    # Pick text channel that is top of the list. Can change to check for Continental in future patch
-    textChannel = list(filter(lambda x: x.type == discord.ChannelType.text and x.position == 0, member.guild.channels))[0]
+    # Pick text channel that is top of the list.
+    # Can change to check for Continental in future patch
+    textChannel = list(filter(
+        lambda x: (x.type == discord.ChannelType.text and
+                   x.position == 0), member.guild.channels))[0]
     # For flavor, pick a random number of days
     numDays = random.randrange(1, 366)
     await textChannel.send(
         f'Welcome to the Continental, {member.mention}.\n'
-        f'My name is Charon. I see you will be staying with us for {numDays} day{"s" if numDays > 1 else ""}.\n'
-        f'Feel free to dial \"{COMMAND_PREFIX}help\" if you require any assistance.\n'
-        f'...and as always, it is a pleasure having you with us again, {member.name}.')
+        f'My name is Charon. I see you will be staying with us for {numDays} '
+        f'day{"s" if numDays > 1 else ""}.\nFeel free to dial '
+        f'\"{COMMAND_PREFIX}help\" if you require any assistance.\n'
+        f'...and as always, it is a pleasure having you with us again, '
+        f'{member.name}.')
 
+
+@bot.event
+async def on_reaction_add(reaction, user):
+    global parties
+    for p in parties:
+        if user.name == bot.user.name:
+            continue
+        if p.isMatchJoinEmoji(reaction):
+            p.addMember(user.name)
+            await reaction.message.edit(embed=p.getEmbed())
+            break
+        if p.isMatchCloseEmoji(reaction, user):
+            p.close()
+            await reaction.message.edit(embed=p.getEmbed())
+            parties.remove(p)
+            break
+
+
+@bot.event
+async def on_reaction_remove(reaction, user):
+    for p in parties:
+        if p.isMatchJoinEmoji(reaction):
+            p.removeMember(user.name)
+            await reaction.message.edit(embed=p.getEmbed())
+            break
+
+# seconds of running background loop
+BACKGROUND_LOOP_TIME = 60
+# This function checks if parties are inactive
+# and cleans up them up if they are
+
+
+@tasks.loop(seconds=BACKGROUND_LOOP_TIME)
+async def update_parties():
+    global parties
+    for p in parties:
+        if p.isInactive():
+            await p.message.edit(embed=p.getEmbed())
+            parties.remove(p)
+
+update_parties.start()
 bot.run(TOKEN)
