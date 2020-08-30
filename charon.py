@@ -14,6 +14,8 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 COMMAND_PREFIX = '.'
 bot = commands.Bot(command_prefix=COMMAND_PREFIX)
 
+LFG_CHANNEL = 'lookingforgroup'
+
 parties = []
 
 logging.basicConfig(level=logging.INFO)
@@ -186,18 +188,28 @@ async def createParty(context, *args):
 
     role = getRole(context.guild.roles, name)
 
-    if role is not None and isGamesRole(role):
-        message = await context.channel.send(role.mention)
+    # For valid parties, the embed message should go into a specified channel
+    # so that regular channels are not moving the embed message from chatter
+    lfgChannel = discord.utils.get(bot.get_all_channels(),
+                                   guild__name=context.guild.name,
+                                   name=LFG_CHANNEL)
+
+    if lfgChannel:
+        if role is not None and isGamesRole(role):
+            message = await lfgChannel.send(role.mention)
+        else:
+            message = await lfgChannel.send(embed=discord.Embed())
+
+        newParty = (party.party(message, context.author, name) if size is None
+                    else party.party(message, context.author, name, size))
+        parties.append(newParty)
+
+        await message.edit(embed=newParty.getEmbed())
+        await message.add_reaction(newParty.joinEmoji)
+        await message.add_reaction(newParty.closeEmoji)
     else:
-        message = await context.channel.send(embed=discord.Embed())
-
-    newParty = (party.party(message, context.author, name) if size is None
-                else party.party(message, context.author, name, size))
-    parties.append(newParty)
-
-    await message.edit(embed=newParty.getEmbed())
-    await message.add_reaction(newParty.joinEmoji)
-    await message.add_reaction(newParty.closeEmoji)
+        await context.channel.send(f'This server has not set up a LFG Channel'
+                                   f' (default: lookingforgroup)')
 
 
 @bot.event
