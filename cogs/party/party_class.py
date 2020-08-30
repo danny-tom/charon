@@ -1,6 +1,8 @@
-import roles
-import discord
 from datetime import datetime
+
+import discord
+
+import roles
 
 # 86400 seconds in 24 hours
 # 43200 seconds in 12 hours
@@ -11,7 +13,7 @@ DEFAULT_JOIN_EMOJI = '👍'
 DEFAULT_CLOSE_EMOJI = '❌'
 
 
-class party:
+class Party:
     def __init__(self, message, leader, name, size=None):
         self.__close = False
         self.message = message
