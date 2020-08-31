@@ -9,7 +9,6 @@ from dotenv import load_dotenv
 
 from cogs.roles.roles_cog import RolesCog
 from cogs.party.party_cog import PartyCog
-# from utility import discord_utility as Utility
 
 
 load_dotenv()
@@ -26,8 +25,6 @@ logging.basicConfig(level=logging.INFO)
 # "charon/cogs" directory with each cog in their own folder
 bot.add_cog(RolesCog(bot))
 bot.add_cog(PartyCog(bot))
-
-# bot.add_cog(Utility(bot))
 
 
 @bot.event
