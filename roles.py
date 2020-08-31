@@ -6,7 +6,6 @@
 # In your Discord Server, make sure the role name is matching exactly and that
 # the bot role is above the role you want it to manage.
 
-
 class Charon_Role:
     def __init__(self, name=None, size=4, emoji='👍', imageURL=None):
         self.name = name
