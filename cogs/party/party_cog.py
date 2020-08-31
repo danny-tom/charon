@@ -106,8 +106,10 @@ class PartyCog(commands.Cog):
     # on_reaction_add
     #
     # The party cog looks for users reacting to the party embed messages so
-    # when a user click on one of the two reactions, the bot can performs
-    # the appropriate actio
+    # when a user clicks on one of the two reactions, the bot can perform
+    # the appropriate action. When the user adds a join reaction, they are
+    # added to the party or waitlist. If the party leader adds a "close"
+    # reaction, it closes the party.
 
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
@@ -127,8 +129,9 @@ class PartyCog(commands.Cog):
     # on_reaction_remove
     #
     # The party cog looks for users reacting to the party embed messages so
-    # when a user click on one of the two reactions, the bot can performs
-    # the appropriate action.
+    # when a user clicks on one of the two reactions, the bot can perform
+    # the appropriate action. When the user removes a join reaction, they are
+    # removed from the party or waitlist.
 
     @commands.Cog.listener()
     async def on_reaction_remove(self, reaction, user):
@@ -141,7 +144,9 @@ class PartyCog(commands.Cog):
     # update_parties
     #
     # This function checks if parties are inactive and cleans up them up if
-    # they are
+    # they are. The loop checks according to the BACKGROUND_LOOP_TIME and
+    # they are labeled inactive based on ACTIVE_DURATION_SECONDS in the
+    # Party class
     @tasks.loop(seconds=int(BACKGROUND_LOOP_TIME))
     async def update_parties(self):
         for p in parties:
