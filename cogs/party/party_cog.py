@@ -9,15 +9,17 @@ import os
 
 import discord
 from discord.ext import commands
+from discord.ext import tasks
 from dotenv import load_dotenv
 
 from cogs.party import party_class as party
-from utility import utility, discord_utility
+from utility import utility
 
 
 load_dotenv()
 COMMAND_PREFIX = os.getenv('COMMAND_PREFIX')
 LFG_CHANNEL = os.getenv('LFG_CHANNEL')
+BACKGROUND_LOOP_TIME = os.getenv('BACKGROUND_LOOP_TIME')
 
 
 parties = []
@@ -26,6 +28,7 @@ parties = []
 class PartyCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.update_parties.start()
 
     # party
     #
@@ -44,6 +47,18 @@ class PartyCog(commands.Cog):
                       'Creates a custom party of SomeName and OptionalSize '
                       '(default size will be 4)')
     async def createParty(self, context, *args):
+        # For valid parties, the embed message should go into a specified
+        # channel so that regular channels are not moving the embed message
+        # from chatter
+        lfgChannel = discord.utils.get(self.bot.get_all_channels(),
+                                       guild__name=context.guild.name,
+                                       name=LFG_CHANNEL)
+
+        if lfgChannel is None:
+            return await context.channel.send(f'This server has not set up a'
+                                              'LFG Channel (default:'
+                                              ' lookingforgroup)')
+
         if len(args) == 0:
             return await context.channel.send(
                 f'{context.author.name}, please include a party name and '
@@ -70,12 +85,17 @@ class PartyCog(commands.Cog):
 
         role = utility.getRole(context.guild.roles, name)
 
-        if role is not None and utility.isGamesRole(role):
-            message = await context.channel.send(role.mention)
-        else:
-            message = await context.channel.send(embed=discord.Embed())
+        try:
+            if role is not None and utility.isGamesRole(role):
+                message = await lfgChannel.send(role.mention)
+            else:
+                message = await lfgChannel.send(embed=discord.Embed())
+        except discord.Forbidden:
+            return await context.channel.send(f'I do not have permissions in'
+                                              f' {LFG_CHANNEL}')
 
-        newParty = (party.Party(message, context.author, name) if size is None
+        newParty = (party.Party(message, context.author, name) if
+                    size is None
                     else party.Party(message, context.author, name, size))
         parties.append(newParty)
 
@@ -83,8 +103,48 @@ class PartyCog(commands.Cog):
         await message.add_reaction(newParty.joinEmoji)
         await message.add_reaction(newParty.closeEmoji)
 
-        # on_reaction_add
-        #
-        # The party cog looks for users reacting to the party embed messages so
-        # when a user click on one of the two reactions, the bot can performs
-        # the appropriate action
+    # on_reaction_add
+    #
+    # The party cog looks for users reacting to the party embed messages so
+    # when a user click on one of the two reactions, the bot can performs
+    # the appropriate actio
+
+    @commands.Cog.listener()
+    async def on_reaction_add(self, reaction, user):
+        for p in parties:
+            if user.name == self.bot.user.name:
+                continue
+            if p.isMatchJoinEmoji(reaction):
+                p.addMember(user.name)
+                await reaction.message.edit(embed=p.getEmbed())
+                break
+            if p.isMatchCloseEmoji(reaction, user):
+                p.close()
+                await reaction.message.edit(embed=p.getEmbed())
+                parties.remove(p)
+                break
+
+    # on_reaction_remove
+    #
+    # The party cog looks for users reacting to the party embed messages so
+    # when a user click on one of the two reactions, the bot can performs
+    # the appropriate action.
+
+    @commands.Cog.listener()
+    async def on_reaction_remove(self, reaction, user):
+        for p in parties:
+            if p.isMatchJoinEmoji(reaction):
+                p.removeMember(user.name)
+                await reaction.message.edit(embed=p.getEmbed())
+                break
+
+    # update_parties
+    #
+    # This function checks if parties are inactive and cleans up them up if
+    # they are
+    @tasks.loop(seconds=int(BACKGROUND_LOOP_TIME))
+    async def update_parties(self):
+        for p in parties:
+            if p.isInactive():
+                await p.message.edit(embed=p.getEmbed())
+                parties.remove(p)

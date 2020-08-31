@@ -4,11 +4,11 @@ import os
 import random
 
 import discord
-from discord.ext import tasks, commands
+from discord.ext import commands
 from dotenv import load_dotenv
 
 from cogs.roles.roles_cog import RolesCog
-from cogs.party.party_cog import PartyCog, parties
+from cogs.party.party_cog import PartyCog
 # from utility import discord_utility as Utility
 
 
@@ -48,49 +48,4 @@ async def on_member_join(member):
         f'{member.name}.')
 
 
-@bot.event
-async def on_reaction_add(reaction, user):
-    global parties
-    print('parties:', parties)
-    for p in parties:
-        print('user.name:', user.name, 'bot.user.name:',
-              bot.user.name)
-        if user.name == bot.user.name:
-            continue
-        if p.isMatchJoinEmoji(reaction):
-            p.addMember(user.name)
-            await reaction.message.edit(embed=p.getEmbed())
-            break
-        if p.isMatchCloseEmoji(reaction, user):
-            p.close()
-            await reaction.message.edit(embed=p.getEmbed())
-            parties.remove(p)
-            break
-
-        # on_reaction_remove
-        #
-        # The party cog looks for users reacting to the party embed messages so
-        # when a user click on one of the two reactions, the bot can performs
-        # the appropriate action.
-
-
-@bot.event
-async def on_reaction_remove(reaction, user):
-    for p in parties:
-        if p.isMatchJoinEmoji(reaction):
-            p.removeMember(user.name)
-            await reaction.message.edit(embed=p.getEmbed())
-            break
-
-
-# This function checks if parties are inactive
-# and cleans up them up if they are
-@tasks.loop(seconds=int(BACKGROUND_LOOP_TIME))
-async def update_parties():
-    for p in parties:
-        if p.isInactive():
-            await p.message.edit(embed=p.getEmbed())
-            parties.remove(p)
-
-update_parties.start()
 bot.run(TOKEN)
