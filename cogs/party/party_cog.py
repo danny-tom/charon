@@ -25,7 +25,7 @@ BACKGROUND_LOOP_TIME = os.getenv('BACKGROUND_LOOP_TIME')
 parties = []
 
 
-class PartyCog(commands.Cog):
+class Party(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.update_parties.start()

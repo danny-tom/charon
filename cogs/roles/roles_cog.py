@@ -18,7 +18,7 @@ load_dotenv()
 COMMAND_PREFIX = os.getenv('COMMAND_PREFIX')
 
 
-class RolesCog(commands.Cog):
+class Roles(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot

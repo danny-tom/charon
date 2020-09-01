@@ -7,8 +7,8 @@ import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 
-from cogs.roles.roles_cog import RolesCog
-from cogs.party.party_cog import PartyCog
+from cogs.roles.roles_cog import Roles
+from cogs.party.party_cog import Party
 
 
 load_dotenv()
@@ -22,8 +22,8 @@ logging.basicConfig(level=logging.INFO)
 
 # Cogs that the bot needs to load when starting. Each cog is found within the
 # "charon/cogs" directory with each cog in their own folder
-bot.add_cog(RolesCog(bot))
-bot.add_cog(PartyCog(bot))
+bot.add_cog(Roles(bot))
+bot.add_cog(Party(bot))
 
 
 @bot.event
