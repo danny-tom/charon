@@ -42,8 +42,8 @@ class PartyCog(commands.Cog):
 
     @commands.command(name='party', brief='Creates a party people can join',
                       description=f'\"{COMMAND_PREFIX}party Role\" - '
-                      'Creates party creator for specific Role with presets\n \
-                      \"{COMMAND_PREFIX}party SomeName OptionalSize\" - '
+                      'Creates party creator for specific Role with presets\n'
+                      f'\"{COMMAND_PREFIX}party SomeName OptionalSize\" - '
                       'Creates a custom party of SomeName and OptionalSize '
                       '(default size will be 4)')
     async def createParty(self, context, *args):
@@ -57,7 +57,7 @@ class PartyCog(commands.Cog):
         if lfgChannel is None:
             return await context.channel.send(f'This server has not set up a'
                                               'LFG Channel (default:'
-                                              ' lookingforgroup)')
+                                              f' {LFG_CHANNEL})')
 
         if len(args) == 0:
             return await context.channel.send(

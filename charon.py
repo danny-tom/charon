@@ -14,7 +14,6 @@ from cogs.party.party_cog import PartyCog
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 COMMAND_PREFIX = os.getenv('COMMAND_PREFIX')
-BACKGROUND_LOOP_TIME = os.getenv('BACKGROUND_LOOP_TIME')
 
 
 bot = commands.Bot(command_prefix=COMMAND_PREFIX)
