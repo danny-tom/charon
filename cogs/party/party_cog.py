@@ -167,7 +167,8 @@ class Party(commands.Cog):
         for guild in self.bot.guilds:
             lfgChannel = discord.utils.get(guild.channels,
                                        name=LFG_CHANNEL)
-            await lfgChannel.purge(check=self.purgeLFGChannelMessage)
+            if lfgChannel is not None:
+                await lfgChannel.purge(check=self.purgeLFGChannelMessage)
 
         for p in parties:
             if p.isInactive():
