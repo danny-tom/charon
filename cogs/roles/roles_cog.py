@@ -113,6 +113,10 @@ class Roles(commands.Cog):
             return await context.channel.send(
                 f'{context.author.name}, role \'{arg[0]}\' does not exist')
 
+        if not utility.isGamesRole(role):
+            return await context.channel.send(
+                f'{context.author.name}, {role} is a restricted role')
+
         members = sorted(
             list(member.name for member in role.members), key=str.casefold)
 
