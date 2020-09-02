@@ -15,8 +15,10 @@ load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 COMMAND_PREFIX = os.getenv('COMMAND_PREFIX')
 
+options = commands.DefaultHelpCommand(dm_help=True, no_category='Other')
+bot = commands.Bot(command_prefix=COMMAND_PREFIX,
+                   help_command=options)
 
-bot = commands.Bot(command_prefix=COMMAND_PREFIX)
 logging.basicConfig(level=logging.INFO)
 
 
