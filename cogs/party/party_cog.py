@@ -28,7 +28,7 @@ parties = []
 class Party(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.update_parties.start()
+        self.update_lfg_channel.start()
 
     # party
     #
@@ -92,7 +92,7 @@ class Party(commands.Cog):
                 message = await lfgChannel.send(embed=discord.Embed())
         except discord.Forbidden:
             return await context.channel.send(f'I do not have permissions in'
-                                              f' {LFG_CHANNEL}')
+                                              f' {lfgChannel.mention}')
 
         newParty = (party.Party(message, context.author, name) if
                     size is None
@@ -101,55 +101,76 @@ class Party(commands.Cog):
 
         await message.edit(embed=newParty.getEmbed())
         await message.add_reaction(newParty.joinEmoji)
-        await message.add_reaction(newParty.closeEmoji)
+        await message.add_reaction(newParty.leaveEmoji)
+
+        await context.channel.send(f'Party \'{newParty.name}\' created in'
+                                   f' {lfgChannel.mention}')
 
     # on_reaction_add
     #
     # The party cog looks for users reacting to the party embed messages so
     # when a user clicks on one of the two reactions, the bot can perform
     # the appropriate action. When the user adds a join reaction, they are
-    # added to the party or waitlist. If the party leader adds a "close"
-    # reaction, it closes the party.
+    # added to the party or waitlist. When the user adds a leave reaction, 
+    # they are removed from the party or waitlist.
 
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
-        for p in parties:
-            if user.name == self.bot.user.name:
-                continue
-            if p.isMatchJoinEmoji(reaction):
-                p.addMember(user.name)
-                await reaction.message.edit(embed=p.getEmbed())
-                break
-            if p.isMatchCloseEmoji(reaction, user):
-                p.close()
-                await reaction.message.edit(embed=p.getEmbed())
+        if user.id == self.bot.user.id:
+            return
+        
+        p = self.__findParty(reaction.message)
+
+        if p is None:
+            return
+
+        if p.joinEmoji == reaction.emoji and not p.hasMember(user):
+            p.addMember(user)
+            await reaction.message.edit(embed=p.getEmbed())
+        elif p.leaveEmoji == reaction.emoji and p.hasMember(user):
+            p.removeMember(user)
+            if p.isEmpty():
                 parties.remove(p)
-                break
+                return await reaction.message.delete()
+            await reaction.message.edit(embed=p.getEmbed())
+        await reaction.remove(user)
 
-    # on_reaction_remove
+    # __findParty
     #
-    # The party cog looks for users reacting to the party embed messages so
-    # when a user clicks on one of the two reactions, the bot can perform
-    # the appropriate action. When the user removes a join reaction, they are
-    # removed from the party or waitlist.
+    # This helper function returns a party based on
+    # a message input; Otherwise, returns None
 
-    @commands.Cog.listener()
-    async def on_reaction_remove(self, reaction, user):
+    @staticmethod
+    def __findParty(message):
         for p in parties:
-            if p.isMatchJoinEmoji(reaction):
-                p.removeMember(user.name)
-                await reaction.message.edit(embed=p.getEmbed())
-                break
+            if p.message.id == message.id:
+                return p
+        return None
 
-    # update_parties
+    # purgeLFGChannelMessage
     #
-    # This function checks if parties are inactive and cleans up them up if
-    # they are. The loop checks according to the BACKGROUND_LOOP_TIME and
-    # they are labeled inactive based on ACTIVE_DURATION_SECONDS in the
-    # Party class
+    # This helper function deletes all messages from
+    # LFG_Channel that is not associated with a party
+
+    def purgeLFGChannelMessage(self, message):
+        return self.__findParty(message) is None
+
+    # update_lfg_channel
+    #
+    # This function cleans the lfg_channel of all messages
+    # that are not associated with a party. It will also close
+    # inactive parties and remove them from the parties list
+    # and delete the related message
+
     @tasks.loop(seconds=int(BACKGROUND_LOOP_TIME))
-    async def update_parties(self):
+    async def update_lfg_channel(self):
+        for guild in self.bot.guilds:
+            lfgChannel = discord.utils.get(guild.channels,
+                                       name=LFG_CHANNEL)
+            if lfgChannel is not None:
+                await lfgChannel.purge(check=self.purgeLFGChannelMessage)
+
         for p in parties:
             if p.isInactive():
-                await p.message.edit(embed=p.getEmbed())
                 parties.remove(p)
+                await p.message.delete()
