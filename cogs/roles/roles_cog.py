@@ -12,6 +12,7 @@ from discord.ext import commands
 from dotenv import load_dotenv
 
 from utility import utility
+from rolesJSON import ROLES_JSON
 
 
 load_dotenv()
@@ -23,6 +24,71 @@ class Roles(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    # addRole
+    #
+    # or if there were issues with assigning the role.
+
+    @commands.command(name='addRole', brief='Add SomeRole to the guild',
+                      description=f'\"{COMMAND_PREFIX}addRole SomeRole OptionalSize OptionalEmoji\" - '
+                      'Add SomeRole to the guild (default size is 4 and emoji to 👍)')
+    async def addRole(self, context, *args):
+        if len(args) == 0:
+            return await context.channel.send(
+                f'{context.author.name}, '
+                f'please tell me what role to add')
+
+        roleName = str(args[0])
+
+        size = None
+        emoji = None
+        imageURL = None
+
+        for arg in args[1:]:
+            keyValue = arg.split("=")
+            if keyValue[0].casefold() == 'size'.casefold():
+                size = int(keyValue[1])
+            elif keyValue[0].casefold() == 'emoji'.casefold():
+                emoji = str(keyValue[1])
+            elif keyValue[0].casefold() == 'imageURL'.casefold():
+                imageURL = str(keyValue[1])
+
+        if ROLES_JSON.addRole(context.guild.id, roleName, size, emoji, imageURL):
+            return await context.channel.send(
+                f'{context.author.name}, '
+                f'{roleName} was added.'
+            )
+
+        await context.channel.send(
+            f'{context.author.name}, '
+            f'{roleName} was not added because it already exists.'
+        )
+
+    # addRole
+    #
+    # or if there were issues with assigning the role.
+
+    @commands.command(name='removeRole', brief='Add SomeRole to the guild',
+                      description=f'\"{COMMAND_PREFIX}addRole SomeRole OptionalSize OptionalEmoji\" - '
+                      'Add SomeRole to the guild (default size is 4 and emoji to 👍)')
+    async def removeRole(self, context, *arg):
+        if len(arg) == 0:
+            return await context.channel.send(
+                f'{context.author.name}, '
+                f'please tell me what role to delete')
+
+        roleName = str(arg[0])
+
+        if ROLES_JSON.removeRole(context.guild.id, roleName):
+            return await context.channel.send(
+                f'{context.author.name}, '
+                f'{roleName} was removed.'
+            )
+        
+        await context.channel.send(
+            f'{context.author.name}, '
+            f'{roleName} was not removed because it did not exist.'
+        )
+    
     # iam
     #
     # The iam command provides the user a way to assign themselves a role in a
