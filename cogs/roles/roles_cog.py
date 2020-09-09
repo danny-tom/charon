@@ -47,7 +47,7 @@ class Roles(commands.Cog):
             return await context.channel.send(
                 f'{context.author.name}, role \'{arg[0]}\' does not exist')
 
-        if not utility.isGamesRole(role):
+        if not utility.isGamesRole(context.guild, self.bot, role):
             return await context.channel.send(
                 f'{context.author.name}, {role} is a restricted role')
 
@@ -83,6 +83,10 @@ class Roles(commands.Cog):
             return await context.channel.send(
                 f'{context.author.name}, role \'{arg[0]}\' does not exist')
 
+        if not utility.isGamesRole(context.guild, self.bot, role):
+            return await context.channel.send(
+                f'{context.author.name}, {role} is a restricted role')
+
         if role not in context.author.roles:
             return await context.channel.send(
                 f'{context.author.name}, but you were never {role}')
@@ -113,12 +117,13 @@ class Roles(commands.Cog):
             return await context.channel.send(
                 f'{context.author.name}, role \'{arg[0]}\' does not exist')
 
-        if not utility.isGamesRole(role):
+        if not utility.isGamesRole(context.guild, self.bot, role):
             return await context.channel.send(
                 f'{context.author.name}, {role} is a restricted role')
 
         members = sorted(
             list(member.name for member in role.members), key=str.casefold)
+        members.remove(self.bot.user.name)
 
         if len(members) == 0:
             return await context.channel.send(
@@ -149,8 +154,8 @@ class Roles(commands.Cog):
 
         # Add valid roles to our display
         for role in context.guild.roles:
-            if utility.isGamesRole(role):
-                games.append([str(role), str(len(role.members))])
+            if utility.isGamesRole(context.guild, self.bot, role):
+                games.append([str(role), str(len(role.members)-1)])
                 if len(str(role)) > longestRole:
                     longestRole = len(str(role))
 
