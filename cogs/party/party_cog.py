@@ -111,14 +111,14 @@ class Party(commands.Cog):
     # The party cog looks for users reacting to the party embed messages so
     # when a user clicks on one of the two reactions, the bot can perform
     # the appropriate action. When the user adds a join reaction, they are
-    # added to the party or waitlist. When the user adds a leave reaction, 
+    # added to the party or waitlist. When the user adds a leave reaction,
     # they are removed from the party or waitlist.
 
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
         if user.id == self.bot.user.id:
             return
-        
+
         p = self.__findParty(reaction.message)
 
         if p is None:
@@ -165,8 +165,7 @@ class Party(commands.Cog):
     @tasks.loop(seconds=int(BACKGROUND_LOOP_TIME))
     async def update_lfg_channel(self):
         for guild in self.bot.guilds:
-            lfgChannel = discord.utils.get(guild.channels,
-                                       name=LFG_CHANNEL)
+            lfgChannel = discord.utils.get(guild.channels, name=LFG_CHANNEL)
             if lfgChannel is not None:
                 await lfgChannel.purge(check=self.purgeLFGChannelMessage)
 

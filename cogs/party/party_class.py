@@ -87,7 +87,7 @@ class Party:
         embed = discord.Embed()
         embed.title = f'{self.name}'
         embed.description = ('Add yourself to the party by using reaction '
-                                f'\"{self.joinEmoji}\"\n')
+                             f'\"{self.joinEmoji}\"\n')
         embed.add_field(
             name=f'Party Members ({len(self.__partyList)}/{self.size})',
             value="\n".join(self.__getNames(self.__partyList)),
