@@ -2,12 +2,13 @@ from datetime import datetime
 
 import discord
 
-import roles
+import json
 
 # 86400 seconds in 24 hours
 # 43200 seconds in 12 hours
 # 14400 seconds in 4 hours
 # 3600 seconds in an hour
+PARTY_JSON_FILE_URL = "cogs/party/party.json"
 ACTIVE_DURATION_SECONDS = 14400
 DEFAULT_PARTY_SIZE = 4
 DEFAULT_JOIN_EMOJI = '👍'
@@ -24,10 +25,10 @@ class Party:
         preset = self.__getPreset(name)
 
         if (preset is not None):
-            self.name = preset.name
-            self.size = preset.size if size is None else size
-            self.imageURL = preset.imageURL
-            self.joinEmoji = preset.emoji
+            self.name = preset['name']
+            self.size = preset['size'] if size is None else size
+            self.imageURL = preset['imageURL']
+            self.joinEmoji = preset['emoji']
         else:
             self.name = name
             self.size = DEFAULT_PARTY_SIZE if size is None else size
@@ -38,9 +39,11 @@ class Party:
 
     @staticmethod
     def __getPreset(name):
-        for preset in roles.ROLES_LIST:
-            if name.casefold() == preset.name.casefold():
-                return preset
+        with open(PARTY_JSON_FILE_URL) as f:
+            data = json.load(f)
+            for role in data['roles']:
+                if (role['name'].casefold() == name.casefold()):
+                    return role
         return None
 
     def __updateTime(self):
