@@ -7,6 +7,7 @@
 # with the bot.
 
 import os
+import discord
 
 from discord.ext import commands
 from dotenv import load_dotenv
@@ -170,3 +171,111 @@ class Roles(commands.Cog):
         await context.channel.send(f'{context.author.name}, here is a list of '
                                    f'the roles that I manage:'
                                    f'```{gamesToStr}```')
+
+    # createRole
+    #
+    # This is an admin command
+    #
+    # createRole creates a valid game role. A valid game role
+    # is a role that exists on server, has no role permissions,
+    # and is manageable by the bot.
+
+    @commands.command(name='createrole',
+                      brief='(Admin Only) creates a game role',
+                      description=f'\"{COMMAND_PREFIX}createrole SomeRole\" - '
+                      'Creates SomeRole on current guild if it does not exist')
+    async def createRole(self, context, *arg):
+        author = context.author
+
+        if not author.guild_permissions.administrator:
+            return await context.channel.send(
+                f'{author.name}, you do '
+                f'not have permissions to create/delete roles')
+
+        botMember = utility.getBotMember(context.guild, self.bot)
+
+        if not botMember.guild_permissions.manage_roles:
+            return await context.channel.send(
+                f'{author.name}, I do '
+                f'not have permissions to manage roles')
+
+        if len(arg) == 0:
+            return await context.channel.send(
+                f'{author.name}, please specify '
+                f'the role you wish to create')
+
+        roleName = str(arg[0]).strip()
+        if roleName == "":
+            return await context.channel.send(
+                f'{author.name}, please specify '
+                f'an appropriate role name')
+
+        role = utility.getRole(context.guild.roles, roleName)
+
+        if role is not None:
+            return await context.channel.send(
+                f'{author.name}, {role.name} '
+                f'already exists on server')
+
+        newRole = await context.guild.create_role(
+            name=roleName,
+            permissions=discord.Permissions.none(),
+            reason=f'Charon Bot: {author.name} created {roleName}'
+        )
+        await botMember.add_roles(newRole)
+        await context.channel.send(
+            f'{author.name}, {newRole.mention} '
+            f'had been added to server')
+
+    # deleteRole
+    #
+    # This is an admin command
+    #
+    # deleteRole deletes a valid game role. A valid game role
+    # is a role that exists on server, has no role permissions,
+    # and is manageable by the bot.
+
+    @commands.command(name='deleterole',
+                      brief='(Admin Only) deletes a game role',
+                      description=f'\"{COMMAND_PREFIX}deleterole SomeRole\" - '
+                      'Deletes SomeRole from the guild')
+    async def deleteRole(self, context, *arg):
+        author = context.author
+
+        if not author.guild_permissions.administrator:
+            return await context.channel.send(
+                f'{author.name}, you do '
+                f'not have permissions to add/delete roles')
+
+        botMember = utility.getBotMember(context.guild, self.bot)
+
+        if not botMember.guild_permissions.manage_roles:
+            return await context.channel.send(
+                f'{author.name}, I do '
+                f'not have permissions to manage roles')
+
+        if len(arg) == 0:
+            return await context.channel.send(
+                f'{author.name}, please specify '
+                f'the games role you wish to delete')
+
+        roleName = str(arg[0]).strip()
+        role = utility.getRole(context.guild.roles, roleName)
+
+        if role is None:
+            return await context.channel.send(
+                f'{author.name}, {roleName} '
+                f'does not exist on server')
+
+        roleName = role.name
+
+        if not utility.isGamesRole(context.guild, self.bot, role):
+            return await context.channel.send(
+                f'{author.name}, {roleName} '
+                f'is a restricted role')
+
+        await role.delete(
+            reason=f'Charon Bot: {author.name} deleted {roleName}')
+        await context.channel.send(
+            f'{author.name}, {roleName} '
+            f'had been deleted from server')

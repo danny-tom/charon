@@ -12,15 +12,19 @@ def getRole(roles, roleName):
     return None
 
 
+# find bot's member object in guild
+# returns None
+def getBotMember(guild, bot):
+    for m in guild.members:
+        if m == bot.user:
+            return m
+    return None
+
+
 # returns if role is found in guild, has no permissions
 # and is manageable by the bot
 def isGamesRole(guild, bot, role):
-    botMember = None
-
-    # find bot's member object in guild
-    for m in guild.members:
-        if m == bot.user:
-            botMember = m
+    botMember = getBotMember(guild, bot)
 
     if botMember is None:
         return False

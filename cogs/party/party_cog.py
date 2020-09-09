@@ -86,7 +86,8 @@ class Party(commands.Cog):
         role = utility.getRole(context.guild.roles, name)
 
         try:
-            if role is not None and utility.isGamesRole(role):
+            if (role is not None and
+                    utility.isGamesRole(context.guild, self.bot, role)):
                 message = await lfgChannel.send(role.mention)
             else:
                 message = await lfgChannel.send(embed=discord.Embed())
