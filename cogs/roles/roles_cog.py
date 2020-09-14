@@ -48,7 +48,7 @@ class Roles(commands.Cog):
             return await context.channel.send(
                 f'{context.author.name}, role \'{arg[0]}\' does not exist')
 
-        if not utility.isGamesRole(context.guild, self.bot, role):
+        if not utility.isGameRole(context.guild, self.bot, role):
             return await context.channel.send(
                 f'{context.author.name}, {role} is a restricted role')
 
@@ -84,7 +84,7 @@ class Roles(commands.Cog):
             return await context.channel.send(
                 f'{context.author.name}, role \'{arg[0]}\' does not exist')
 
-        if not utility.isGamesRole(context.guild, self.bot, role):
+        if not utility.isGameRole(context.guild, self.bot, role):
             return await context.channel.send(
                 f'{context.author.name}, {role} is a restricted role')
 
@@ -118,7 +118,7 @@ class Roles(commands.Cog):
             return await context.channel.send(
                 f'{context.author.name}, role \'{arg[0]}\' does not exist')
 
-        if not utility.isGamesRole(context.guild, self.bot, role):
+        if not utility.isGameRole(context.guild, self.bot, role):
             return await context.channel.send(
                 f'{context.author.name}, {role} is a restricted role')
 
@@ -155,7 +155,7 @@ class Roles(commands.Cog):
 
         # Add valid roles to our display
         for role in context.guild.roles:
-            if utility.isGamesRole(context.guild, self.bot, role):
+            if utility.isGameRole(context.guild, self.bot, role):
                 games.append([str(role), str(len(role.members)-1)])
                 if len(str(role)) > longestRole:
                     longestRole = len(str(role))
@@ -192,13 +192,6 @@ class Roles(commands.Cog):
                 f'{author.name}, you do '
                 f'not have permissions to create/delete roles')
 
-        botMember = utility.getBotMember(context.guild, self.bot)
-
-        if not botMember.guild_permissions.manage_roles:
-            return await context.channel.send(
-                f'{author.name}, I do '
-                f'not have permissions to manage roles')
-
         if len(arg) == 0:
             return await context.channel.send(
                 f'{author.name}, please specify '
@@ -217,15 +210,24 @@ class Roles(commands.Cog):
                 f'{author.name}, {role.name} '
                 f'already exists on server')
 
-        newRole = await context.guild.create_role(
-            name=roleName,
-            permissions=discord.Permissions.none(),
-            reason=f'Charon Bot: {author.name} created {roleName}'
-        )
-        await botMember.add_roles(newRole)
+        try:
+            newRole = await context.guild.create_role(
+                name=roleName,
+                permissions=discord.Permissions.none(),
+                reason=f'Charon Bot: {author.name} created {roleName}'
+            )
+            await (discord.utils.find(
+                lambda m: m == self.bot.user, context.guild.members)
+                .add_roles(newRole))
+        except discord.Forbidden:
+            return await context.channel.send(
+                f'{author.name}, I do not '
+                f'have permissions to manage roles.'
+            )
+
         await context.channel.send(
             f'{author.name}, {newRole.mention} '
-            f'had been added to server')
+            f'has been added to server')
 
     # deleteRole
     #
@@ -247,13 +249,6 @@ class Roles(commands.Cog):
                 f'{author.name}, you do '
                 f'not have permissions to add/delete roles')
 
-        botMember = utility.getBotMember(context.guild, self.bot)
-
-        if not botMember.guild_permissions.manage_roles:
-            return await context.channel.send(
-                f'{author.name}, I do '
-                f'not have permissions to manage roles')
-
         if len(arg) == 0:
             return await context.channel.send(
                 f'{author.name}, please specify '
@@ -269,13 +264,20 @@ class Roles(commands.Cog):
 
         roleName = role.name
 
-        if not utility.isGamesRole(context.guild, self.bot, role):
+        if not utility.isGameRole(context.guild, self.bot, role):
             return await context.channel.send(
                 f'{author.name}, {roleName} '
                 f'is a restricted role')
 
-        await role.delete(
-            reason=f'Charon Bot: {author.name} deleted {roleName}')
+        try:
+            await role.delete(
+                reason=f'Charon Bot: {author.name} deleted {roleName}')
+        except discord.Forbidden:
+            return await context.channel.send(
+                f'{author.name}, I do not '
+                f'have permissions to manage role {roleName}.'
+            )
+
         await context.channel.send(
-            f'{author.name}, {roleName} '
-            f'had been deleted from server')
+                f'{author.name}, {roleName} '
+                f'has been deleted from server')

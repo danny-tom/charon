@@ -1,4 +1,4 @@
-from discord import Permissions
+from discord import Permissions, utils
 
 # utility.py
 
@@ -6,47 +6,28 @@ from discord import Permissions
 # returns the role regardless of input case-sensitivity
 # returns None if no match can be found
 def getRole(roles, roleName):
-    for r in roles:
-        if roleName.casefold() == str(r).casefold():
-            return r
-    return None
+    return utils.find(
+        lambda r: str(r).casefold() == roleName.casefold(), roles)
 
 
-# find bot's member object in guild
-# returns None
-def getBotMember(guild, bot):
-    for m in guild.members:
-        if m == bot.user:
-            return m
-    return None
+# Returns True if the role has no permissions and is in the bot roles
+def isGameRole(guild, bot, role):
+    botMember = utils.find(lambda m: m == bot.user, guild.members)
 
-
-# returns if role is found in guild, has no permissions
-# and is manageable by the bot
-def isGamesRole(guild, bot, role):
-    botMember = getBotMember(guild, bot)
-
-    if botMember is None:
+    if botMember is None or role is None:
         return False
 
-    # get the highest role with manage_role permission
-    botRole = None
-    manageRolePermission = Permissions.none()
-    manageRolePermission.manage_roles = True
-    for r in botMember.roles:
-        if r.permissions.is_superset(manageRolePermission):
-            botRole = r
-            break
+    manageRoles = [r for r in botMember.roles if r.permissions.manage_roles]
 
-    if botRole is None:
+    if len(manageRoles) == 0:
         return False
 
-    # if role is found, has no permissions, and is below
-    # bot's manage_role role position, then True
-    for r in botMember.roles:
-        if (r == role and
-                r.position < botRole.position and
-                r.permissions.is_subset(Permissions.none())):
-            return True
+    topManageRole = max(manageRoles, key=lambda r: r.position)
 
-    return False
+    if (topManageRole is None or
+            role not in botMember.roles or
+            not role.permissions.is_subset(Permissions.none()) or
+            role >= topManageRole):
+        return False
+
+    return True

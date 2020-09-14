@@ -85,22 +85,28 @@ class Party(commands.Cog):
 
         role = utility.getRole(context.guild.roles, name)
 
+        newParty = (party.Party(context.author, name) if
+                    size is None
+                    else party.Party(context.author, name, size))
+
+        messageArgs = {"embed": newParty.getEmbed()}
+
+        if newParty.imageURL is not None:
+            messageArgs["file"] = discord.File(
+                party.IMAGE_PATH + newParty.imageURL,
+                filename=newParty.imageURL)
+        if utility.isGameRole(context.guild, self.bot, role):
+            messageArgs["content"] = role.mention
+
         try:
-            if (role is not None and
-                    utility.isGamesRole(context.guild, self.bot, role)):
-                message = await lfgChannel.send(role.mention)
-            else:
-                message = await lfgChannel.send(embed=discord.Embed())
+            message = await lfgChannel.send(**messageArgs)
         except discord.Forbidden:
             return await context.channel.send(f'I do not have permissions in'
                                               f' {lfgChannel.mention}')
 
-        newParty = (party.Party(message, context.author, name) if
-                    size is None
-                    else party.Party(message, context.author, name, size))
+        newParty.message = message
         parties.append(newParty)
 
-        await message.edit(embed=newParty.getEmbed())
         await message.add_reaction(newParty.joinEmoji)
         await message.add_reaction(newParty.leaveEmoji)
 

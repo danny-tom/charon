@@ -13,11 +13,12 @@ ACTIVE_DURATION_SECONDS = 14400
 DEFAULT_PARTY_SIZE = 4
 DEFAULT_JOIN_EMOJI = '👍'
 DEFAULT_LEAVE_EMOJI = '❌'
+IMAGE_PATH = "./images/"
 
 
 class Party:
-    def __init__(self, message, leader, name, size=None):
-        self.message = message
+    def __init__(self, leader, name, size=None):
+        self.message = None
         self.__lastUpdatedDateTime = datetime.now()
         self.__partyList = [leader]
         self.__waitlist = []
@@ -101,7 +102,7 @@ class Party:
                 value="\n".join(self.__getNames(self.__waitlist)),
                 inline=True)
         if self.imageURL is not None:
-            embed.set_thumbnail(url=self.imageURL)
+            embed.set_thumbnail(url="attachment://"+self.imageURL)
 
         return embed
 

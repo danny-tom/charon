@@ -4,31 +4,31 @@
             "name": "Valorant",
             "size": 5,
             "emoji": "🔫",
-            "imageURL": "https://vignette.wikia.nocookie.net/leagueoflegends/images/8/88/Valorant_icon.png/revision/latest?cb=20200302105445"
+            "imageURL": "valorant.png"
         },
         {
             "name": "Overwatch",
             "size": 6,
             "emoji": "🎯",
-            "imageURL": "https://vignette.wikia.nocookie.net/overwatch/images/5/53/Pi_defaultblack.png/revision/latest/top-crop/width/220/height/220?cb=20160704195235"
+            "imageURL": "overwatch.png"
         },
         {
             "name": "ProjectWinter",
             "size": 8,
             "emoji": "❄️",
-            "imageURL": "https://pbs.twimg.com/profile_images/1084835909185372160/QzmW7PC8.jpg"
+            "imageURL": "projectwinter.png"
         },
         {
             "name": "FallGuys",
             "size": 4,
             "emoji": "🧗",
-            "imageURL": "https://static.wikia.nocookie.net/fallguysultimateknockout_gamepedia_en/images/b/bc/Wiki.png/revision/latest?cb=20190613015708?version=bdae2a0fdadd959a5f3c9164f4ab71ff"
+            "imageURL": "fallguys.png"
         },
         {
             "name": "AmongUs",
             "size": 10,
             "emoji": "🚀",
-            "imageURL": "https://is4-ssl.mzstatic.com/image/thumb/Purple114/v4/7f/44/b6/7f44b610-668f-511d-2b19-c830f281503e/AppIcon-0-0-1x_U007emarketing-0-0-0-7-0-0-sRGB-0-0-0-GLES2_U002c0-512MB-85-220-0-0.png/246x0w.png"
+            "imageURL": "amongus.png"
         }
     ]
 }
