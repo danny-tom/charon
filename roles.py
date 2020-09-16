@@ -36,8 +36,24 @@ PROJECTWINTER = Charon_Role(
     imageURL='https://pbs.twimg.com/profile_images/1084835909185372160/'
     'QzmW7PC8.jpg')
 
+AMONGUS = Charon_Role(
+    name='AmongUs',
+    size=9,
+    emoji='👽',
+    imageURL='https://giantbomb1.cbsistatic.com/uploads/scale_small/39/397146/'
+    '3061806-maincapsuleimage.jpg')
+
+APEXLEGENDS = Charon_Role(
+    name='ApexLegends',
+    size=10,
+    emoji='🍗',
+    imageURL='https://upload.wikimedia.org/wikipedia/en/d/db/'
+    'Apex_legends_cover.jpg')
+
 ROLES_LIST = [
     VALORANT,
     OVERWATCH,
-    PROJECTWINTER
+    PROJECTWINTER,
+    AMONGUS,
+    APEXLEGENDS
 ]
