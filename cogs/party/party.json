@@ -1,0 +1,34 @@
+{
+    "roles": [
+        {
+            "name": "Valorant",
+            "size": 5,
+            "emoji": "🔫",
+            "imageURL": "valorant.png"
+        },
+        {
+            "name": "Overwatch",
+            "size": 6,
+            "emoji": "🎯",
+            "imageURL": "overwatch.png"
+        },
+        {
+            "name": "ProjectWinter",
+            "size": 8,
+            "emoji": "❄️",
+            "imageURL": "projectwinter.png"
+        },
+        {
+            "name": "FallGuys",
+            "size": 4,
+            "emoji": "🧗",
+            "imageURL": "fallguys.png"
+        },
+        {
+            "name": "AmongUs",
+            "size": 10,
+            "emoji": "🚀",
+            "imageURL": "amongus.png"
+        }
+    ]
+}

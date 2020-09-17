@@ -1,19 +1,33 @@
+from discord import Permissions, utils
+
 # utility.py
-from roles import ROLES_LIST
 
 
 # returns the role regardless of input case-sensitivity
 # returns None if no match can be found
 def getRole(roles, roleName):
-    for r in roles:
-        if roleName.casefold() == str(r).casefold():
-            return r
-    return None
+    return utils.find(
+        lambda r: str(r).casefold() == roleName.casefold(), roles)
 
 
-# restricts roles that can be picked based on roles.py
-def isGamesRole(role):
-    for validRole in ROLES_LIST:
-        if validRole.name.casefold() == str(role).casefold():
-            return True
-    return False
+# Returns True if the role has no permissions and is in the bot roles
+def isGameRole(guild, bot, role):
+    botMember = utils.find(lambda m: m == bot.user, guild.members)
+
+    if botMember is None or role is None:
+        return False
+
+    manageRoles = [r for r in botMember.roles if r.permissions.manage_roles]
+
+    if len(manageRoles) == 0:
+        return False
+
+    topManageRole = max(manageRoles, key=lambda r: r.position)
+
+    if (topManageRole is None or
+            role not in botMember.roles or
+            not role.permissions.is_subset(Permissions.none()) or
+            role >= topManageRole):
+        return False
+
+    return True

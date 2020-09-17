@@ -85,21 +85,28 @@ class Party(commands.Cog):
 
         role = utility.getRole(context.guild.roles, name)
 
+        newParty = (party.Party(context.author, name) if
+                    size is None
+                    else party.Party(context.author, name, size))
+
+        messageArgs = {"embed": newParty.getEmbed()}
+
+        if newParty.imageURL is not None:
+            messageArgs["file"] = discord.File(
+                party.IMAGE_PATH + newParty.imageURL,
+                filename=newParty.imageURL)
+        if utility.isGameRole(context.guild, self.bot, role):
+            messageArgs["content"] = role.mention
+
         try:
-            if role is not None and utility.isGamesRole(role):
-                message = await lfgChannel.send(role.mention)
-            else:
-                message = await lfgChannel.send(embed=discord.Embed())
+            message = await lfgChannel.send(**messageArgs)
         except discord.Forbidden:
             return await context.channel.send(f'I do not have permissions in'
                                               f' {lfgChannel.mention}')
 
-        newParty = (party.Party(message, context.author, name) if
-                    size is None
-                    else party.Party(message, context.author, name, size))
+        newParty.message = message
         parties.append(newParty)
 
-        await message.edit(embed=newParty.getEmbed())
         await message.add_reaction(newParty.joinEmoji)
         await message.add_reaction(newParty.leaveEmoji)
 
@@ -111,14 +118,14 @@ class Party(commands.Cog):
     # The party cog looks for users reacting to the party embed messages so
     # when a user clicks on one of the two reactions, the bot can perform
     # the appropriate action. When the user adds a join reaction, they are
-    # added to the party or waitlist. When the user adds a leave reaction, 
+    # added to the party or waitlist. When the user adds a leave reaction,
     # they are removed from the party or waitlist.
 
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
         if user.id == self.bot.user.id:
             return
-        
+
         p = self.__findParty(reaction.message)
 
         if p is None:
@@ -165,8 +172,7 @@ class Party(commands.Cog):
     @tasks.loop(seconds=int(BACKGROUND_LOOP_TIME))
     async def update_lfg_channel(self):
         for guild in self.bot.guilds:
-            lfgChannel = discord.utils.get(guild.channels,
-                                       name=LFG_CHANNEL)
+            lfgChannel = discord.utils.get(guild.channels, name=LFG_CHANNEL)
             if lfgChannel is not None:
                 await lfgChannel.purge(check=self.purgeLFGChannelMessage)
 
